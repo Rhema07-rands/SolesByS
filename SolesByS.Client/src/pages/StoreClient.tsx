@@ -752,7 +752,7 @@ function StoreClient() {
               
               // Save order to history
               const newOrder = {
-                id: 'ORD-' + Date.now().toString(36).toUpperCase(),
+                id: 'ORD-' + String(orders.length + 1).padStart(3, '0'),
                 date: new Date().toISOString(),
                 items: cart.map(item => ({ ...item })),
                 subtotal: cartSubtotal,
