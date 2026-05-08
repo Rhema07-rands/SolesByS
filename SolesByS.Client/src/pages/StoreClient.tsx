@@ -701,7 +701,7 @@ function StoreClient() {
     <div className="account-container" style={{maxWidth: '800px'}}>
       <div className="section-header" style={{marginBottom: '2rem'}}>
         <h2>{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
-        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false}); setImageFile(null); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
+        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:''}); setImageFile(null); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
       </div>
       <div className="account-card" style={{padding: '3rem'}}>
         <form onSubmit={handleAddProduct} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
@@ -757,7 +757,7 @@ function StoreClient() {
           <h2>Manage Inventory</h2>
           <span style={{color: 'var(--text-secondary)'}}>{products.length} products total</span>
         </div>
-        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false}); setImageFile(null); setActiveView('add-product'); }} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><PlusSquare size={18} /> Add New Product</button>
+        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:''}); setImageFile(null); setActiveView('add-product'); }} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><PlusSquare size={18} /> Add New Product</button>
       </div>
       <div className="account-card" style={{padding: '1.5rem'}}>
         <table style={{width: '100%', borderCollapse: 'collapse'}}>
