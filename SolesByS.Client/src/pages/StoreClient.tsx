@@ -1,42 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Truck, Headphones, Tag, CreditCard, Package, CheckCircle, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban } from 'lucide-react';
 import '../App.css';
 
-// Mock data based on the reference image
-
-
-const newArrivals = [
-  { id: 1, name: 'Cloud Shift Lightweight Runner Pro Edition', price: 150000, rating: 5.0, image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&q=80' },
-  { id: 2, name: 'Wave Strike Dynamic Boost Sneaker', price: 180000, rating: 4.7, image: 'https://images.unsplash.com/photo-1549298916-b41d501d377b?w=400&q=80' },
-  { id: 3, name: 'Titan Edge High Impact Stability Trainers', price: 95000, rating: 3.5, image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&q=80' },
-  { id: 4, name: 'Velocity Boost Xtreme High Shock Absorbers', price: 165000, rating: 4.3, image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400&q=80' },
-];
-
-const initialCart = [
-  { id: 1, name: 'Nike Air Force 1', sz: 'UK 10', price: 145000, qty: 1, image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=200&q=80' },
-  { id: 3, name: 'Titan Edge High Impact Stability Trainers', sz: 'UK 9.5', price: 95000, qty: 1, image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=200&q=80' },
-];
-
-const mockUser = {
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  phone: '+234 812 345 6789',
-  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&q=80',
-  memberSince: 'January 2026',
-  address: '123 Sneaker Avenue, Ikoyi, Lagos'
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem('user');
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { name: 'Guest', email: '', phone: '', avatar: '', address: '', id: 0 };
 };
-
 
 function StoreClient() {
   const [activeView, setActiveView] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
-  const [cart, setCart] = useState(initialCart);
+  const [cart, setCart] = useState<any[]>([]);
   const [role] = useState(localStorage.getItem('role') || 'user');
-  const [products, setProducts] = useState<any[]>(newArrivals);
+  const [products, setProducts] = useState<any[]>([]);
   const [dbUsers, setDbUsers] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState(getStoredUser);
   const navigate = useNavigate();
+
+  // Editable account form state
+  const [editName, setEditName] = useState(currentUser.name || '');
+  const [editPhone, setEditPhone] = useState(currentUser.phone || '');
+  const [editAddress, setEditAddress] = useState(currentUser.address || '');
+  const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
+  const [editAvatarPreview, setEditAvatarPreview] = useState(currentUser.avatar || '');
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // Sync form state when currentUser changes
+  const refreshUserFields = useCallback((user: any) => {
+    setEditName(user.name || '');
+    setEditPhone(user.phone || '');
+    setEditAddress(user.address || '');
+    setEditAvatarPreview(user.avatar || '');
+    setEditAvatarFile(null);
+  }, []);
 
   useEffect(() => {
     fetch('https://solesbys.onrender.com/api/products')
@@ -243,59 +244,123 @@ function StoreClient() {
       </div>
       <div className="section-header">
         <h2>Search Results {searchQuery ? `for "${searchQuery}"` : ''} </h2>
-        <span style={{color: 'var(--text-secondary)'}}>24 items found</span>
+        <span style={{color: 'var(--text-secondary)'}}>{products.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase())).length} items found</span>
       </div>
       <div className="products-grid">
-        {/* Repeat array for fuller grid effect */}
-        {[...newArrivals, ...newArrivals.slice().reverse()].map((product, i) => (
+        {products.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase())).map((product, i) => (
           <div key={`search-${i}`} className="product-card">
-            <div className="product-img-wrapper" onClick={() => setActiveView('cart')} style={{cursor:'pointer'}}>
+            <div className="product-img-wrapper" onClick={() => { setSelectedProduct(product); setActiveView('product-details'); }} style={{cursor:'pointer'}}>
               <img src={product.image} alt={product.name} />
             </div>
             <div className="product-info">
               <div className="product-name">{product.name}</div>
               <div className="product-footer">
-                <span className="rating">★ {product.rating}</span>
                 <span className="price">₦{product.price.toLocaleString()}</span>
                 <button className="add-to-cart-small" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>
               </div>
             </div>
           </div>
         ))}
+        {products.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && <p style={{gridColumn: '1/-1', color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem'}}>No products found matching "{searchQuery}".</p>}
       </div>
     </div>
   );
+
+  const handleSaveProfile = async () => {
+    if (!currentUser.id) return alert('You must be logged in to save.');
+    setSavingProfile(true);
+    try {
+      let avatarUrl = currentUser.avatar || '';
+
+      // Upload new avatar if file selected
+      if (editAvatarFile) {
+        const formData = new FormData();
+        formData.append('file', editAvatarFile);
+        formData.append('upload_preset', 'SOLESBYS');
+        const uploadRes = await fetch('https://api.cloudinary.com/v1_1/dr5nd8kr2/image/upload', {
+          method: 'POST',
+          body: formData
+        });
+        if (!uploadRes.ok) throw new Error('Image upload failed');
+        const uploadData = await uploadRes.json();
+        avatarUrl = uploadData.secure_url;
+      }
+
+      const res = await fetch(`https://solesbys.onrender.com/api/users/${currentUser.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName,
+          phone: editPhone,
+          address: editAddress,
+          avatar: avatarUrl,
+          email: currentUser.email
+        })
+      });
+      if (!res.ok) throw new Error('Failed to update profile');
+      const updatedUser = await res.json();
+
+      const newUserData = { ...currentUser, name: updatedUser.name, phone: updatedUser.phone, address: updatedUser.address, avatar: updatedUser.avatar };
+      localStorage.setItem('user', JSON.stringify(newUserData));
+      setCurrentUser(newUserData);
+      refreshUserFields(newUserData);
+      alert('Profile updated successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save profile. Please try again.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const renderAccountContent = () => (
     <div className="account-container">
       <div className="account-card">
         <div className="account-header-bg"></div>
         <div className="account-profile">
-          <img src={mockUser.avatar} alt={mockUser.name} className="account-avatar" />
-          <div className="account-header-info">
-            <h2>{mockUser.name}</h2>
-            <p className="account-member-since">MEMBER SINCE {mockUser.memberSince.toUpperCase()}</p>
+          <div style={{position: 'relative', cursor: 'pointer'}} onClick={() => document.getElementById('edit-avatar-input')?.click()}>
+            {editAvatarPreview ? (
+              <img src={editAvatarPreview} alt={currentUser.name} className="account-avatar" />
+            ) : (
+              <div className="account-avatar" style={{width: 90, height: 90, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 700, color: 'white'}}>
+                {(currentUser.name || 'G').charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div style={{position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: 'var(--active-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-sidebar)', fontSize: '0.8rem', color: 'white'}}>✎</div>
           </div>
-          <button className="btn" style={{ border: '1px solid #334155', background: '#1e293b', color: '#f8fafc', marginLeft: 'auto' }}>Edit Profile</button>
+          <input type="file" id="edit-avatar-input" accept="image/*" style={{display: 'none'}} onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) { setEditAvatarFile(file); setEditAvatarPreview(URL.createObjectURL(file)); }
+          }} />
+          <div className="account-header-info">
+            <h2>{currentUser.name || 'Guest'}</h2>
+            <p className="account-member-since" style={{color: 'var(--text-secondary)'}}>{currentUser.email}</p>
+          </div>
         </div>
         
-        <div className="account-details-grid">
+        <div className="account-details-grid" style={{gap: '1.5rem'}}>
+          <div className="detail-group">
+            <label>Full Name</label>
+            <input type="text" value={editName} onChange={e => setEditName(e.target.value)} style={{width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: 'white', padding: '0.8rem 1rem', borderRadius: '8px'}} />
+          </div>
           <div className="detail-group">
             <label>Email Address</label>
-            <div className="detail-value">{mockUser.email} <span className="verified-badge">✓ Verified</span></div>
+            <div className="detail-value">{currentUser.email} <span className="verified-badge">✓ Verified</span></div>
           </div>
           <div className="detail-group">
             <label>Phone Number</label>
-            <div className="detail-value">{mockUser.phone}</div>
+            <input type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="+234 812 345 6789" style={{width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: 'white', padding: '0.8rem 1rem', borderRadius: '8px'}} />
           </div>
           <div className="detail-group">
-            <label>Default Shipping Address</label>
-            <div className="detail-value">{mockUser.address}</div>
+            <label>Shipping Address</label>
+            <textarea value={editAddress} onChange={e => setEditAddress(e.target.value)} placeholder="123 Sneaker Avenue, Ikoyi, Lagos" rows={2} style={{width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: 'white', padding: '0.8rem 1rem', borderRadius: '8px', resize: 'vertical', fontFamily: 'inherit'}} />
           </div>
-          <div className="detail-group">
-            <label>Password</label>
-            <div className="detail-value">••••••••</div>
-          </div>
+        </div>
+
+        <div style={{padding: '0 2rem 2rem', display: 'flex', justifyContent: 'flex-end'}}>
+          <button className="btn-primary" disabled={savingProfile} onClick={handleSaveProfile} style={{padding: '0.8rem 2.5rem', fontSize: '1rem', borderRadius: '10px'}}>
+            {savingProfile ? 'Saving...' : 'Save Profile'}
+          </button>
         </div>
       </div>
     </div>
@@ -346,7 +411,7 @@ function StoreClient() {
         <h2>My Wishlist (4 Items)</h2>
       </div>
       <div className="products-grid">
-        {newArrivals.map(product => (
+        {products.slice(0, 4).map(product => (
           <div key={`wish-${product.id}`} className="product-card">
             <div className="product-img-wrapper" style={{position: 'relative'}}>
               <img src={product.image} alt={product.name} />
@@ -428,19 +493,19 @@ function StoreClient() {
           <div className="billing-grid">
             <div className="auth-form-group">
               <label>Full Name</label>
-              <input type="text" defaultValue={mockUser.name} id="checkout-name" />
+              <input type="text" defaultValue={currentUser.name} id="checkout-name" />
             </div>
             <div className="auth-form-group">
               <label>Phone Number</label>
-              <input type="text" defaultValue={mockUser.phone} id="checkout-phone" />
+              <input type="text" defaultValue={currentUser.phone} id="checkout-phone" />
             </div>
             <div className="auth-form-group" style={{gridColumn: '1 / -1'}}>
               <label>Email Address</label>
-              <input type="email" defaultValue={mockUser.email} id="checkout-email" />
+              <input type="email" defaultValue={currentUser.email} id="checkout-email" />
             </div>
             <div className="auth-form-group" style={{gridColumn: '1 / -1'}}>
               <label>Address</label>
-              <input type="text" defaultValue={mockUser.address} id="checkout-address" />
+              <input type="text" defaultValue={currentUser.address} id="checkout-address" />
             </div>
           </div>
         </div>
@@ -782,8 +847,12 @@ function StoreClient() {
       {/* Sidebar Navigation */}
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <img src={mockUser.avatar} alt="User" style={{width: 36, height: 36, borderRadius: '50%', objectFit: 'cover'}} />
-          <span className="logo-text" style={{fontSize: '1rem', fontWeight: 600}}>{mockUser.name}</span>
+          {currentUser.avatar ? (
+            <img src={currentUser.avatar} alt="User" style={{width: 36, height: 36, borderRadius: '50%', objectFit: 'cover'}} />
+          ) : (
+            <div style={{width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 700, color: 'white', flexShrink: 0}}>{(currentUser.name || 'G').charAt(0).toUpperCase()}</div>
+          )}
+          <span className="logo-text" style={{fontSize: '1rem', fontWeight: 600}}>{currentUser.name || 'Guest'}</span>
         </div>
         
         <nav className="sidebar-nav">
@@ -835,7 +904,7 @@ function StoreClient() {
               <span className="nav-icon"><Settings size={18} /></span> My Account
             </div>
 
-            <div className="nav-item" onClick={() => { localStorage.removeItem('role'); navigate('/login'); }}>
+            <div className="nav-item" onClick={() => { localStorage.removeItem('role'); localStorage.removeItem('user'); navigate('/login'); }}>
               <span className="nav-icon"><LogOut size={18} /></span> Sign Out
             </div>
           </div>
@@ -851,7 +920,11 @@ function StoreClient() {
           </div>
           <div className="header-actions">
             <button className="icon-btn" onClick={() => setActiveView('account')}>
-              <img src={mockUser.avatar} alt="User" style={{width: 32, height: 32, borderRadius: '50%', objectFit: 'cover'}} />
+              {currentUser.avatar ? (
+                <img src={currentUser.avatar} alt="User" style={{width: 32, height: 32, borderRadius: '50%', objectFit: 'cover'}} />
+              ) : (
+                <div style={{width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700, color: 'white'}}>{(currentUser.name || 'G').charAt(0).toUpperCase()}</div>
+              )}
             </button>
             {role !== 'admin' && (
               <>
