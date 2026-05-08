@@ -34,6 +34,9 @@ using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.EnsureCreated();
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Address longtext;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Avatar longtext;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Password longtext;"); } catch { }
         Console.WriteLine("Database connected successfully.");
     }
     catch (Exception ex)
@@ -107,11 +110,35 @@ app.MapDelete("/api/users/{id}", async (int id, AppDbContext db) =>
     return Results.NotFound();
 });
 
-app.MapPost("/api/login", ([FromBody] LoginRequest req) =>
+app.MapPut("/api/users/{id}", async (int id, UserEntity updatedUser, AppDbContext db) =>
 {
-    if (req.Email == "adminsarah@admin.com" && req.Password == "sarah2004")
-        return Results.Ok(new { role = "admin" });
-    return Results.Ok(new { role = "user" });
+    var user = await db.Users.FindAsync(id);
+    if (user is null) return Results.NotFound();
+    
+    user.Name = updatedUser.Name;
+    user.Phone = updatedUser.Phone;
+    user.Address = updatedUser.Address;
+    user.Avatar = updatedUser.Avatar;
+    if (!string.IsNullOrEmpty(updatedUser.Password))
+    {
+        user.Password = updatedUser.Password;
+    }
+    await db.SaveChangesAsync();
+    return Results.Ok(user);
+});
+
+app.MapPost("/api/login", async ([FromBody] LoginRequest req, AppDbContext db) =>
+{
+    if (req.Email == "adminsarah@test.com" && req.Password == "sarah2004")
+        return Results.Ok(new { role = "admin", name = "Sarah (Admin)", email = req.Email });
+        
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Email == req.Email && u.Password == req.Password);
+    if (user != null)
+    {
+        if (user.IsSuspended) return Results.BadRequest("Account is suspended.");
+        return Results.Ok(new { role = "user", id = user.Id, name = user.Name, email = user.Email, phone = user.Phone, address = user.Address, avatar = user.Avatar });
+    }
+    return Results.Unauthorized();
 });
 
 app.MapGet("/api/sign-upload", () => {
@@ -138,7 +165,7 @@ app.MapPost("/api/checkout", async ([FromBody] CheckoutRequest request) =>
         }
         mailBody += $"\nTotal Order Value: ₦{total}\n";
 
-        // IMPORTANT: You need to generate a Google App Password for this to work.
+        // IMPORTANT: I need to generate a Google App Password for this to work.
         var smtpClient = new SmtpClient("smtp.gmail.com")
         {
             Port = 587,

@@ -32,7 +32,7 @@ function StoreClient() {
   const [activeView, setActiveView] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState(initialCart);
-  const [role] = useState('admin');
+  const [role] = useState(localStorage.getItem('role') || 'user');
   const [products, setProducts] = useState<any[]>(newArrivals);
   const [dbUsers, setDbUsers] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -835,7 +835,7 @@ function StoreClient() {
               <span className="nav-icon"><Settings size={18} /></span> My Account
             </div>
 
-            <div className="nav-item" onClick={() => navigate('/login')}>
+            <div className="nav-item" onClick={() => { localStorage.removeItem('role'); navigate('/login'); }}>
               <span className="nav-icon"><LogOut size={18} /></span> Sign Out
             </div>
           </div>
