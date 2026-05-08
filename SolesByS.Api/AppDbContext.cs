@@ -31,6 +31,7 @@ namespace SolesByS.Api
         public decimal Price { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
+        public string Size { get; set; } = string.Empty;
         public int DiscountPercentage { get; set; }
         public bool IsSpecialOffer { get; set; }
         public decimal Rating { get; set; } = 5.0m;

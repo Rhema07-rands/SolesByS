@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Truck, Headphones, Tag, CreditCard, Package, CheckCircle, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban } from 'lucide-react';
+import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Truck, Headphones, Tag, CreditCard, Package, CheckCircle, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban, Edit2 } from 'lucide-react';
 import '../App.css';
 
 const getStoredUser = () => {
@@ -81,7 +81,7 @@ function StoreClient() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
           />
-          <span className="search-shortcut">⌘ K</span>
+
         </div>
       </div>
 
@@ -244,10 +244,10 @@ function StoreClient() {
       </div>
       <div className="section-header">
         <h2>Search Results {searchQuery ? `for "${searchQuery}"` : ''} </h2>
-        <span style={{color: 'var(--text-secondary)'}}>{products.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase())).length} items found</span>
+        <span style={{color: 'var(--text-secondary)'}}>{products.filter(p => { const q = searchQuery.toLowerCase(); return p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q) || p.size?.toLowerCase().includes(q); }).length} items found</span>
       </div>
       <div className="products-grid">
-        {products.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase())).map((product, i) => (
+        {products.filter(p => { const q = searchQuery.toLowerCase(); return p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q) || p.size?.toLowerCase().includes(q); }).map((product, i) => (
           <div key={`search-${i}`} className="product-card">
             <div className="product-img-wrapper" onClick={() => { setSelectedProduct(product); setActiveView('product-details'); }} style={{cursor:'pointer'}}>
               <img src={product.image} alt={product.name} />
@@ -256,12 +256,13 @@ function StoreClient() {
               <div className="product-name">{product.name}</div>
               <div className="product-footer">
                 <span className="price">₦{product.price.toLocaleString()}</span>
+                {product.size && <span style={{color: 'var(--text-secondary)', fontSize: '0.85rem'}}>Size: {product.size}</span>}
                 <button className="add-to-cart-small" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>
               </div>
             </div>
           </div>
         ))}
-        {products.filter(p => p.name?.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && <p style={{gridColumn: '1/-1', color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem'}}>No products found matching "{searchQuery}".</p>}
+        {products.filter(p => { const q = searchQuery.toLowerCase(); return p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q) || p.size?.toLowerCase().includes(q); }).length === 0 && <p style={{gridColumn: '1/-1', color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem'}}>No products found matching "{searchQuery}".</p>}
       </div>
     </div>
   );
@@ -371,36 +372,17 @@ function StoreClient() {
     <div className="account-container">
       <div className="section-header">
         <h2>Order History</h2>
-        <span style={{color: 'var(--text-secondary)'}}>2 Total Orders</span>
+        <span style={{color: 'var(--text-secondary)'}}>0 Orders</span>
       </div>
-      <div className="orders-list" style={{padding: '0'}}>
-        <div className="order-item" style={{padding: '1.5rem'}}>
-          <div className="order-icon" style={{width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Package size={36} color="var(--active-blue)" /></div>
-          <div className="order-info">
-            <div className="order-id" style={{fontSize: '1.1rem'}}>#ORD-29837</div>
-            <div className="order-date" style={{marginBottom: '0.5rem'}}>Placed on March 30, 2026</div>
-            <div style={{fontSize: '0.9rem', color: 'var(--text-primary)'}}>1x Nike Air Max 270</div>
-          </div>
-          <div className="order-amount" style={{fontSize: '1.2rem'}}>₦210,000</div>
-          <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end'}}>
-             <div className="order-status text-blue">In Transit (Arriving April 5)</div>
-             <button style={{background: 'none', border: 'none', color: 'var(--active-blue)', cursor: 'pointer', fontWeight: 600}}>Track Package</button>
-          </div>
+      <div className="account-card" style={{padding: '4rem 2rem', textAlign: 'center'}}>
+        <div style={{margin: '0 auto 1.5rem', width: 80, height: 80, background: 'var(--active-bg)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <Package size={36} color="var(--text-secondary)" />
         </div>
-        
-        <div className="order-item" style={{padding: '1.5rem'}}>
-          <div className="order-icon" style={{width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><CheckCircle size={36} color="#10b981" /></div>
-          <div className="order-info">
-            <div className="order-id" style={{fontSize: '1.1rem'}}>#ORD-29112</div>
-            <div className="order-date" style={{marginBottom: '0.5rem'}}>Placed on March 10, 2026</div>
-            <div style={{fontSize: '0.9rem', color: 'var(--text-primary)'}}>1x Nike Air Force 1</div>
-          </div>
-          <div className="order-amount" style={{fontSize: '1.2rem'}}>₦145,000</div>
-          <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end'}}>
-             <div className="order-status text-green">Delivered on March 12</div>
-             <button style={{background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: 600}}>Write Review</button>
-          </div>
-        </div>
+        <h3 style={{color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>No orders yet</h3>
+        <p style={{color: 'var(--text-secondary)', marginBottom: '2rem'}}>When you place an order, it will appear here.</p>
+        <button className="btn-primary" onClick={() => setActiveView('home')} style={{padding: '0.8rem 2rem', borderRadius: '10px'}}>
+          Start Shopping
+        </button>
       </div>
     </div>
   );
@@ -408,24 +390,17 @@ function StoreClient() {
   const renderWishlistContent = () => (
     <div className="account-container">
       <div className="section-header">
-        <h2>My Wishlist (4 Items)</h2>
+        <h2>My Wishlist</h2>
       </div>
-      <div className="products-grid">
-        {products.slice(0, 4).map(product => (
-          <div key={`wish-${product.id}`} className="product-card">
-            <div className="product-img-wrapper" style={{position: 'relative'}}>
-              <img src={product.image} alt={product.name} />
-              <button className="wishlist-remove"><Heart size={18} fill="#ef4444" color="#ef4444" /></button>
-            </div>
-            <div className="product-info">
-              <div className="product-name">{product.name}</div>
-              <div className="product-footer">
-                <span className="price">₦{product.price.toLocaleString()}</span>
-                <button className="add-to-cart-small" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="account-card" style={{padding: '4rem 2rem', textAlign: 'center'}}>
+        <div style={{margin: '0 auto 1.5rem', width: 80, height: 80, background: 'var(--active-bg)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <Heart size={36} color="var(--text-secondary)" />
+        </div>
+        <h3 style={{color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>No items in your wishlist</h3>
+        <p style={{color: 'var(--text-secondary)', marginBottom: '2rem'}}>Items you save will appear here.</p>
+        <button className="btn-primary" onClick={() => setActiveView('home')} style={{padding: '0.8rem 2rem', borderRadius: '10px'}}>
+          Browse Products
+        </button>
       </div>
     </div>
   );
@@ -627,9 +602,24 @@ function StoreClient() {
     );
   };
 
-  const [newProduct, setNewProduct] = useState({ name: '', description: '', price: '', brand: '', isSpecialOffer: false });
+  const [newProduct, setNewProduct] = useState({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false });
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+
+  const handleEditProduct = (product: any) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name || '',
+      description: product.description || '',
+      price: String(product.price || ''),
+      brand: product.brand || '',
+      size: product.size || '',
+      isSpecialOffer: product.isSpecialOffer || false
+    });
+    setImageFile(null);
+    setActiveView('add-product');
+  };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -652,25 +642,38 @@ function StoreClient() {
         description: newProduct.description,
         price: parseFloat(newProduct.price),
         brand: newProduct.brand,
+        size: newProduct.size,
         imageUrl: uploadData.secure_url,
         isSpecialOffer: newProduct.isSpecialOffer,
         discountPercentage: newProduct.isSpecialOffer ? 25 : 0,
         rating: 5.0
       };
 
-      await fetch('https://solesbys.onrender.com/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productPayload)
-      });
+      if (editingProduct) {
+        // UPDATE existing product
+        await fetch(`https://solesbys.onrender.com/api/products/${editingProduct.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productPayload)
+        });
+        alert('Product updated successfully!');
+      } else {
+        // CREATE new product
+        await fetch('https://solesbys.onrender.com/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productPayload)
+        });
+        alert('Product added successfully!');
+      }
 
-      alert('Product added successfully!');
-      setNewProduct({ name: '', description: '', price: '', brand: '', isSpecialOffer: false });
+      setNewProduct({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false });
       setImageFile(null);
+      setEditingProduct(null);
       setActiveView('manage-products');
     } catch (err) {
       console.error(err);
-      alert('Failed to add product');
+      alert('Failed to save product');
     } finally {
       setUploading(false);
     }
@@ -678,7 +681,10 @@ function StoreClient() {
 
   const renderAddProductContent = () => (
     <div className="account-container" style={{maxWidth: '800px'}}>
-      <div className="section-header" style={{marginBottom: '2rem'}}><h2>Add New Product</h2></div>
+      <div className="section-header" style={{marginBottom: '2rem'}}>
+        <h2>{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
+        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false}); setImageFile(null); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
+      </div>
       <div className="account-card" style={{padding: '3rem'}}>
         <form onSubmit={handleAddProduct} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
           <div className="auth-form-group">
@@ -693,20 +699,27 @@ function StoreClient() {
             <label>Description</label>
             <textarea required value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} style={{border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white', padding: '1rem', borderRadius: '8px', minHeight: '100px'}} />
           </div>
-          <div className="auth-form-group">
-            <label>Price (₦)</label>
-            <input type="number" required value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} style={{border: '1px solid var(--border-color)'}} />
+          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'}}>
+            <div className="auth-form-group">
+              <label>Price (₦)</label>
+              <input type="number" required value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} style={{border: '1px solid var(--border-color)'}} />
+            </div>
+            <div className="auth-form-group">
+              <label>Shoe Size</label>
+              <input type="text" required placeholder="e.g. UK 9, EU 43, US 10" value={newProduct.size} onChange={e => setNewProduct({...newProduct, size: e.target.value})} style={{border: '1px solid var(--border-color)'}} />
+            </div>
           </div>
           <div className="auth-form-group" style={{flexDirection: 'row', alignItems: 'center', gap: '1rem'}}>
             <input type="checkbox" checked={newProduct.isSpecialOffer} onChange={e => setNewProduct({...newProduct, isSpecialOffer: e.target.checked})} style={{width: '20px', height: '20px'}} />
             <label style={{marginBottom: 0, fontSize: '1rem', color: 'var(--text-primary)'}}>Mark as Special Offer</label>
           </div>
           <div className="auth-form-group">
-            <label>Product Image</label>
-            <input type="file" accept="image/*" required onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} style={{border: '1px solid var(--border-color)', padding: '0.5rem'}} />
+            <label>Product Image {editingProduct && <span style={{color: 'var(--text-secondary)', fontWeight: 400}}>(leave empty to keep current)</span>}</label>
+            {editingProduct && <img src={editingProduct.image || editingProduct.imageUrl} alt="Current" style={{width: 80, height: 80, borderRadius: '8px', objectFit: 'cover', marginBottom: '0.5rem', background: 'rgba(255,255,255,0.05)'}} />}
+            <input type="file" accept="image/*" {...(!editingProduct ? {required: true} : {})} onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} style={{border: '1px solid var(--border-color)', padding: '0.5rem'}} />
           </div>
           <button type="submit" className="btn-primary" disabled={uploading} style={{marginTop: '1rem', padding: '1rem', fontSize: '1.1rem'}}>
-            {uploading ? 'Uploading & Saving...' : 'Publish Product'}
+            {uploading ? 'Uploading & Saving...' : editingProduct ? 'Update Product' : 'Publish Product'}
           </button>
         </form>
       </div>
@@ -720,7 +733,7 @@ function StoreClient() {
           <h2>Manage Inventory</h2>
           <span style={{color: 'var(--text-secondary)'}}>{products.length} products total</span>
         </div>
-        <button className="btn-primary" onClick={() => setActiveView('add-product')} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><PlusSquare size={18} /> Add New Product</button>
+        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false}); setImageFile(null); setActiveView('add-product'); }} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><PlusSquare size={18} /> Add New Product</button>
       </div>
       <div className="account-card" style={{padding: '1.5rem'}}>
         <table style={{width: '100%', borderCollapse: 'collapse'}}>
@@ -745,13 +758,14 @@ function StoreClient() {
                 <td style={{padding: '1rem'}}>
                   {p.isSpecialOffer ? <span className="verified-badge" style={{background: 'rgba(217,119,6,0.2)', color: '#fbbf24'}}>Special Offer</span> : <span className="verified-badge">Standard</span>}
                 </td>
-                <td style={{padding: '1rem'}}>
+                <td style={{padding: '1rem', display: 'flex', gap: '0.75rem'}}>
+                  <button onClick={() => handleEditProduct(p)} style={{background: 'none', border: 'none', color: 'var(--active-blue)', cursor: 'pointer'}}><Edit2 size={18}/></button>
                   <button onClick={async () => {
                     if(confirm('Delete this product?')) {
                       await fetch(`https://solesbys.onrender.com/api/products/${p.id}`, { method: 'DELETE' });
                       setProducts(products.filter(prod => prod.id !== p.id));
                     }
-                  }} style={{background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer'}}><Trash2 size={18}/></button>
+                  }} style={{background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer'}}><Trash2 size={18}/></button></button>
                 </td>
               </tr>
             ))}

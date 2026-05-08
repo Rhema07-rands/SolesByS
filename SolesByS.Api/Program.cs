@@ -37,6 +37,7 @@ using (var scope = app.Services.CreateScope())
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Address longtext;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Avatar longtext;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Password longtext;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN Size longtext;"); } catch { }
         Console.WriteLine("Database connected successfully.");
     }
     catch (Exception ex)
@@ -75,6 +76,24 @@ app.MapDelete("/api/products/{id}", async (int id, AppDbContext db) =>
         return Results.NoContent();
     }
     return Results.NotFound();
+});
+
+app.MapPut("/api/products/{id}", async (int id, ProductEntity updatedProduct, AppDbContext db) =>
+{
+    var product = await db.Products.FindAsync(id);
+    if (product is null) return Results.NotFound();
+    
+    product.Name = updatedProduct.Name;
+    product.Description = updatedProduct.Description;
+    product.Price = updatedProduct.Price;
+    product.Brand = updatedProduct.Brand;
+    product.Size = updatedProduct.Size;
+    product.ImageUrl = !string.IsNullOrEmpty(updatedProduct.ImageUrl) ? updatedProduct.ImageUrl : product.ImageUrl;
+    product.IsSpecialOffer = updatedProduct.IsSpecialOffer;
+    product.DiscountPercentage = updatedProduct.IsSpecialOffer ? 25 : 0;
+    
+    await db.SaveChangesAsync();
+    return Results.Ok(product);
 });
 
 app.MapGet("/api/users", async (AppDbContext db) =>
