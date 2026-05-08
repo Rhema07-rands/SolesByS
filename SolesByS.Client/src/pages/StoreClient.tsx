@@ -623,19 +623,24 @@ function StoreClient() {
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFile) return alert('Please select an image');
+    if (!imageFile && !editingProduct) return alert('Please select an image');
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      formData.append('upload_preset', 'SOLESBYS');
+      let imageUrl = editingProduct?.image || editingProduct?.imageUrl || '';
       
-      const uploadRes = await fetch('https://api.cloudinary.com/v1_1/dr5nd8kr2/image/upload', {
-        method: 'POST',
-        body: formData
-      });
-      if(!uploadRes.ok) throw new Error("Cloudinary upload failed");
-      const uploadData = await uploadRes.json();
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        formData.append('upload_preset', 'SOLESBYS');
+        
+        const uploadRes = await fetch('https://api.cloudinary.com/v1_1/dr5nd8kr2/image/upload', {
+          method: 'POST',
+          body: formData
+        });
+        if(!uploadRes.ok) throw new Error("Cloudinary upload failed");
+        const uploadData = await uploadRes.json();
+        imageUrl = uploadData.secure_url;
+      }
       
       const productPayload = {
         name: newProduct.name,
@@ -643,7 +648,7 @@ function StoreClient() {
         price: parseFloat(newProduct.price),
         brand: newProduct.brand,
         size: newProduct.size,
-        imageUrl: uploadData.secure_url,
+        imageUrl: imageUrl,
         isSpecialOffer: newProduct.isSpecialOffer,
         discountPercentage: newProduct.isSpecialOffer ? 25 : 0,
         rating: 5.0
@@ -765,7 +770,7 @@ function StoreClient() {
                       await fetch(`https://solesbys.onrender.com/api/products/${p.id}`, { method: 'DELETE' });
                       setProducts(products.filter(prod => prod.id !== p.id));
                     }
-                  }} style={{background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer'}}><Trash2 size={18}/></button></button>
+                  }} style={{background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer'}}><Trash2 size={18}/></button>
                 </td>
               </tr>
             ))}
