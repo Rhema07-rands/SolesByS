@@ -96,7 +96,7 @@ function StoreClient() {
             <div key={p.id} className={`offer-card ${i === 0 ? 'main-offer' : 'secondary-offer ' + (i===1 ? 'light-green' : 'light-blue')}`}>
               {i === 0 ? (
                 <div className="offer-content">
-                  <span className="discount-badge">SAVE 25%</span>
+                  <span className="discount-badge">SAVE {p.discountPercentage || 25}%</span>
                   <h3>{p.name}</h3>
                   <p>{p.description}</p>
                   <div className="offer-actions">
@@ -106,7 +106,7 @@ function StoreClient() {
                 </div>
               ) : (
                 <>
-                  <span className="discount-badge">SAVE 25%</span>
+                  <span className="discount-badge">SAVE {p.discountPercentage || 25}%</span>
                   <h3>{p.name}</h3>
                   {role !== 'admin' && <button className="btn-light" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}><ShoppingCart size={16} /> Add to Cart</button>}
                   <div className="offer-price-centered">₦{p.price.toLocaleString()}</div>
@@ -126,8 +126,11 @@ function StoreClient() {
       <div className="products-grid">
         {products.filter(p => !p.isSpecialOffer).slice(0, 4).map(product => (
           <div key={product.id} className="product-card">
-            <div className="product-img-wrapper" onClick={() => setActiveView('cart')} style={{cursor:'pointer'}}>
+            <div className="product-img-wrapper" onClick={() => setActiveView('cart')} style={{cursor:'pointer', position: 'relative'}}>
               <img src={product.image} alt={product.name} />
+              {product.isSpecialOffer && product.discountPercentage > 0 && (
+                <div className="discount-ribbon">{product.discountPercentage}% Off</div>
+              )}
             </div>
             <div className="product-info">
               <div className="product-name">{product.name}</div>
@@ -180,7 +183,7 @@ function StoreClient() {
             <div key={p.id} className={`offer-card ${i === 0 ? 'main-offer' : 'secondary-offer ' + (i%2===1 ? 'light-green' : 'light-blue')}`}>
               {i === 0 ? (
                 <div className="offer-content">
-                  <span className="discount-badge">SAVE 25%</span>
+                  <span className="discount-badge">SAVE {p.discountPercentage || 25}%</span>
                   <h3>{p.name}</h3>
                   <p>{p.description}</p>
                   <div className="offer-actions">
@@ -190,7 +193,7 @@ function StoreClient() {
                 </div>
               ) : (
                 <>
-                  <span className="discount-badge">SAVE 25%</span>
+                  <span className="discount-badge">SAVE {p.discountPercentage || 25}%</span>
                   <h3>{p.name}</h3>
                   {role !== 'admin' && <button className="btn-light" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}><ShoppingCart size={16} /> Add to Cart</button>}
                   <div className="offer-price-centered">₦{p.price.toLocaleString()}</div>
@@ -209,8 +212,11 @@ function StoreClient() {
       <div className="products-grid">
         {products.filter(p => !p.isSpecialOffer).map((product, i) => (
           <div key={`prod-${i}`} className="product-card">
-            <div className="product-img-wrapper" onClick={() => setActiveView('cart')} style={{cursor:'pointer'}}>
+            <div className="product-img-wrapper" onClick={() => setActiveView('cart')} style={{cursor:'pointer', position: 'relative'}}>
               <img src={product.image} alt={product.name} />
+              {product.isSpecialOffer && product.discountPercentage > 0 && (
+                <div className="discount-ribbon">{product.discountPercentage}% Off</div>
+              )}
             </div>
             <div className="product-info">
               <div className="product-name">{product.name}</div>
@@ -482,6 +488,10 @@ function StoreClient() {
               <label>Address</label>
               <input type="text" defaultValue={currentUser.address} id="checkout-address" />
             </div>
+            <div className="auth-form-group" style={{gridColumn: '1 / -1'}}>
+              <label>Order Notes <span style={{color: 'var(--text-secondary)', fontWeight: 400}}>(shoe size, color preferences, special requests, etc.)</span></label>
+              <textarea id="checkout-notes" placeholder="e.g. Size UK 10, please double-box for protection..." rows={3} style={{background: 'rgba(0,0,0,0.3)', color: 'white', border: '1px solid var(--border-color)', padding: '0.8rem 1rem', borderRadius: '8px', resize: 'vertical', fontFamily: 'inherit'}} />
+            </div>
           </div>
         </div>
       </div>
@@ -516,12 +526,14 @@ function StoreClient() {
               const phoneInput = (document.getElementById('checkout-phone') as HTMLInputElement).value;
               const emailInput = (document.getElementById('checkout-email') as HTMLInputElement).value;
               const addressInput = (document.getElementById('checkout-address') as HTMLInputElement).value;
+              const notesInput = (document.getElementById('checkout-notes') as HTMLTextAreaElement).value;
 
               // Format the HTML for the email
               let orderHtml = `<h2 style="color: #333;">New Order from ${nameInput}</h2>`;
               orderHtml += `<p><strong>Email:</strong> ${emailInput}</p>`;
               orderHtml += `<p><strong>Phone:</strong> ${phoneInput}</p>`;
               orderHtml += `<p><strong>Address:</strong> ${addressInput}</p>`;
+              if (notesInput) orderHtml += `<p><strong>Customer Notes:</strong> ${notesInput}</p>`;
               orderHtml += `<hr/><table style="width:100%; text-align:left; border-collapse: collapse;">`;
               
               cart.forEach(item => {
@@ -602,7 +614,7 @@ function StoreClient() {
     );
   };
 
-  const [newProduct, setNewProduct] = useState({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false });
+  const [newProduct, setNewProduct] = useState({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '' });
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -615,7 +627,8 @@ function StoreClient() {
       price: String(product.price || ''),
       brand: product.brand || '',
       size: product.size || '',
-      isSpecialOffer: product.isSpecialOffer || false
+      isSpecialOffer: product.isSpecialOffer || false,
+      discountPercentage: String(product.discountPercentage || '')
     });
     setImageFile(null);
     setActiveView('add-product');
@@ -650,7 +663,7 @@ function StoreClient() {
         size: newProduct.size,
         imageUrl: imageUrl,
         isSpecialOffer: newProduct.isSpecialOffer,
-        discountPercentage: newProduct.isSpecialOffer ? 25 : 0,
+        discountPercentage: newProduct.isSpecialOffer ? (parseInt(newProduct.discountPercentage) || 25) : 0,
         rating: 5.0
       };
 
@@ -672,7 +685,7 @@ function StoreClient() {
         alert('Product added successfully!');
       }
 
-      setNewProduct({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false });
+      setNewProduct({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '' });
       setImageFile(null);
       setEditingProduct(null);
       setActiveView('manage-products');
@@ -718,6 +731,12 @@ function StoreClient() {
             <input type="checkbox" checked={newProduct.isSpecialOffer} onChange={e => setNewProduct({...newProduct, isSpecialOffer: e.target.checked})} style={{width: '20px', height: '20px'}} />
             <label style={{marginBottom: 0, fontSize: '1rem', color: 'var(--text-primary)'}}>Mark as Special Offer</label>
           </div>
+          {newProduct.isSpecialOffer && (
+            <div className="auth-form-group">
+              <label>Discount Percentage (%)</label>
+              <input type="number" min="1" max="99" required placeholder="e.g. 25" value={newProduct.discountPercentage} onChange={e => setNewProduct({...newProduct, discountPercentage: e.target.value})} style={{border: '1px solid var(--border-color)'}} />
+            </div>
+          )}
           <div className="auth-form-group">
             <label>Product Image {editingProduct && <span style={{color: 'var(--text-secondary)', fontWeight: 400}}>(leave empty to keep current)</span>}</label>
             {editingProduct && <img src={editingProduct.image || editingProduct.imageUrl} alt="Current" style={{width: 80, height: 80, borderRadius: '8px', objectFit: 'cover', marginBottom: '0.5rem', background: 'rgba(255,255,255,0.05)'}} />}
@@ -830,28 +849,83 @@ function StoreClient() {
 
   const renderProductDetailsContent = () => {
     if (!selectedProduct) return null;
+    const p = selectedProduct;
+    const hasDiscount = p.isSpecialOffer && p.discountPercentage > 0;
+    const discountedPrice = hasDiscount ? Math.round(p.price * (1 - p.discountPercentage / 100)) : p.price;
+
     return (
       <div className="account-container" style={{maxWidth: '1000px'}}>
-        <div style={{display: 'flex', gap: '3rem', background: 'var(--bg-sidebar)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--border-color)'}}>
-          <div style={{flex: '1'}}>
-            <img src={selectedProduct.image} alt={selectedProduct.name} style={{width: '100%', borderRadius: '12px', objectFit: 'cover'}} />
+        <div style={{display: 'flex', gap: '3rem', background: 'var(--bg-sidebar)', padding: '2.5rem', borderRadius: '16px', border: '1px solid var(--border-color)'}}>
+          {/* Product Image */}
+          <div style={{flex: '1', position: 'relative'}}>
+            {hasDiscount && (
+              <div className="discount-ribbon" style={{top: '16px', left: '0px', fontSize: '0.85rem', padding: '0.4rem 1rem 0.4rem 1.2rem'}}>{p.discountPercentage}% Off</div>
+            )}
+            <div style={{background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '320px'}}>
+              <img src={p.image} alt={p.name} style={{maxWidth: '100%', maxHeight: '300px', objectFit: 'contain', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))'}} />
+            </div>
           </div>
-          <div style={{flex: '1', display: 'flex', flexDirection: 'column'}}>
-            <div style={{color: 'var(--active-blue)', fontWeight: 600, marginBottom: '0.5rem', textTransform: 'uppercase'}}>{selectedProduct.brand}</div>
-            <h2 style={{fontSize: '2.5rem', marginBottom: '1rem', color: 'var(--text-primary)'}}>{selectedProduct.name}</h2>
-            <div style={{fontSize: '2rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--text-primary)'}}>₦{selectedProduct.price.toLocaleString()}</div>
-            
-            <p style={{color: 'var(--text-secondary)', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem'}}>
-              {selectedProduct.description}
-            </p>
 
+          {/* Product Info */}
+          <div style={{flex: '1', display: 'flex', flexDirection: 'column'}}>
+            {p.brand && (
+              <div style={{color: 'var(--active-blue)', fontWeight: 700, marginBottom: '0.5rem', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '0.1em'}}>{p.brand}</div>
+            )}
+            <h2 style={{fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-primary)', lineHeight: 1.2}}>{p.name}</h2>
+            
+            {/* Price */}
+            <div style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem'}}>
+              {hasDiscount ? (
+                <>
+                  <span style={{fontSize: '2rem', fontWeight: 700, color: '#10b981'}}>₦{discountedPrice.toLocaleString()}</span>
+                  <span style={{fontSize: '1.2rem', color: 'var(--text-secondary)', textDecoration: 'line-through'}}>₦{p.price.toLocaleString()}</span>
+                  <span className="discount-badge" style={{fontSize: '0.75rem'}}>SAVE {p.discountPercentage}%</span>
+                </>
+              ) : (
+                <span style={{fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)'}}>₦{p.price.toLocaleString()}</span>
+              )}
+            </div>
+
+            {/* Details Grid */}
+            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '10px', border: '1px solid var(--border-color)'}}>
+              {p.size && (
+                <div>
+                  <div style={{fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.25rem'}}>Shoe Size</div>
+                  <div style={{color: 'var(--text-primary)', fontWeight: 600}}>{p.size}</div>
+                </div>
+              )}
+              <div>
+                <div style={{fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.25rem'}}>Type</div>
+                <div style={{color: 'var(--text-primary)', fontWeight: 600}}>{p.isSpecialOffer ? 'Special Offer' : 'Standard'}</div>
+              </div>
+              {p.brand && (
+                <div>
+                  <div style={{fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.25rem'}}>Brand</div>
+                  <div style={{color: 'var(--text-primary)', fontWeight: 600}}>{p.brand}</div>
+                </div>
+              )}
+              <div>
+                <div style={{fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.25rem'}}>Availability</div>
+                <div style={{color: '#10b981', fontWeight: 600}}>In Stock</div>
+              </div>
+            </div>
+
+            {/* Description */}
+            {p.description && (
+              <div style={{marginBottom: '2rem'}}>
+                <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.5rem'}}>Description</div>
+                <p style={{color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: '1.7'}}>{p.description}</p>
+              </div>
+            )}
+
+            {/* Actions */}
             <div style={{marginTop: 'auto', display: 'flex', gap: '1rem'}}>
               {role !== 'admin' && (
-                <button className="btn-primary" onClick={() => setActiveView('cart')} style={{flex: 2, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.1rem'}}>
+                <button className="btn-primary" onClick={() => setActiveView('cart')} style={{flex: 2, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.1rem', borderRadius: '10px'}}>
                   <ShoppingCart size={20} /> Add to Cart
                 </button>
               )}
-              <button className="btn-light" onClick={() => setActiveView('products')} style={{flex: 1, padding: '1rem', fontSize: '1.1rem'}}>
+              <button className="btn-light" onClick={() => setActiveView('products')} style={{flex: 1, padding: '1rem', fontSize: '1.1rem', borderRadius: '10px'}}>
                 Back
               </button>
             </div>
