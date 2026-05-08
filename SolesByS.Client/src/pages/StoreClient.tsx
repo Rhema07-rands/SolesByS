@@ -39,6 +39,43 @@ function StoreClient() {
   }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<any[]>([]);
+
+  // Cart functions
+  const addToCart = (product: any) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+      }
+      return [...prev, { ...product, qty: 1, sz: product.size || 'N/A' }];
+    });
+  };
+
+  const removeFromCart = (id: number) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateCartQty = (id: number, delta: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = item.qty + delta;
+        return newQty > 0 ? { ...item, qty: newQty } : item;
+      }
+      return item;
+    }).filter(item => item.qty > 0));
+  };
+
+  // Wishlist functions
+  const toggleWishlist = (product: any) => {
+    setWishlist(prev => {
+      const exists = prev.find(item => item.id === product.id);
+      if (exists) return prev.filter(item => item.id !== product.id);
+      return [...prev, product];
+    });
+  };
+
+  const isInWishlist = (id: number) => wishlist.some(item => item.id === id);
   const [role] = useState(localStorage.getItem('role') || 'user');
   const [products, setProducts] = useState<any[]>([]);
   const [dbUsers, setDbUsers] = useState<any[]>([]);
@@ -124,7 +161,7 @@ function StoreClient() {
                   <h3>{p.name}</h3>
                   <p>{p.description}</p>
                   <div className="offer-actions">
-                    {role !== 'admin' && <button className="btn-dark" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><ShoppingCart size={16} /> Add to Cart</button>}
+                    {role !== 'admin' && <button className="btn-dark" onClick={() => addToCart(p)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><ShoppingCart size={16} /> Add to Cart</button>}
                     <button className="btn-dark" onClick={() => { setSelectedProduct(p); setActiveView('product-details'); }} style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)'}}>Details</button>
                     <span className="offer-price">₦{p.price.toLocaleString()}</span>
                   </div>
@@ -133,7 +170,7 @@ function StoreClient() {
                 <>
                   <span className="discount-badge">SAVE {p.discountPercentage || 25}%</span>
                   <h3>{p.name}</h3>
-                  {role !== 'admin' && <button className="btn-light" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}><ShoppingCart size={16} /> Add to Cart</button>}
+                  {role !== 'admin' && <button className="btn-light" onClick={() => addToCart(p)} style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}><ShoppingCart size={16} /> Add to Cart</button>}
                   <button className="btn-light" onClick={() => { setSelectedProduct(p); setActiveView('product-details'); }} style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}>Details</button>
                   <div className="offer-price-centered">₦{p.price.toLocaleString()}</div>
                 </>
@@ -151,8 +188,13 @@ function StoreClient() {
       
       <div className="products-grid">
         {products.filter(p => !p.isSpecialOffer).slice(0, 4).map(product => (
-          <div key={product.id} className="product-card">
-            <div className="product-img-wrapper" onClick={() => setActiveView('cart')} style={{cursor:'pointer', position: 'relative'}}>
+          <div key={product.id} className="product-card" style={{position: 'relative'}}>
+            {role !== 'admin' && (
+              <button onClick={() => toggleWishlist(product)} style={{position: 'absolute', top: '8px', right: '8px', zIndex: 2, background: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s'}}>
+                <Heart size={16} color={isInWishlist(product.id) ? '#ef4444' : 'white'} fill={isInWishlist(product.id) ? '#ef4444' : 'none'} />
+              </button>
+            )}
+            <div className="product-img-wrapper" onClick={() => { setSelectedProduct(product); setActiveView('product-details'); }} style={{cursor:'pointer', position: 'relative'}}>
               <img src={product.image} alt={product.name} />
               {product.isSpecialOffer && product.discountPercentage > 0 && (
                 <div className="discount-ribbon">{product.discountPercentage}% Off</div>
@@ -164,7 +206,7 @@ function StoreClient() {
                 <span className="price">₦{product.price.toLocaleString()}</span>
                 <div style={{display: 'flex', gap: '4px'}}>
                   <button className="add-to-cart-small" onClick={() => { setSelectedProduct(product); setActiveView('product-details'); }} style={{background: 'var(--bg-app)', border: '1px solid var(--border-color)', color: 'var(--text-primary)'}}>Details</button>
-                  {role !== 'admin' && <button className="add-to-cart-small" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>}
+                  {role !== 'admin' && <button className="add-to-cart-small" onClick={() => addToCart(product)} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>}
                 </div>
               </div>
             </div>
@@ -213,7 +255,7 @@ function StoreClient() {
                   <h3>{p.name}</h3>
                   <p>{p.description}</p>
                   <div className="offer-actions">
-                    {role !== 'admin' && <button className="btn-dark" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><ShoppingCart size={16} /> Add to Cart</button>}
+                    {role !== 'admin' && <button className="btn-dark" onClick={() => addToCart(p)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><ShoppingCart size={16} /> Add to Cart</button>}
                     <span className="offer-price">₦{p.price.toLocaleString()}</span>
                   </div>
                 </div>
@@ -221,7 +263,7 @@ function StoreClient() {
                 <>
                   <span className="discount-badge">SAVE {p.discountPercentage || 25}%</span>
                   <h3>{p.name}</h3>
-                  {role !== 'admin' && <button className="btn-light" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}><ShoppingCart size={16} /> Add to Cart</button>}
+                  {role !== 'admin' && <button className="btn-light" onClick={() => addToCart(p)} style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}><ShoppingCart size={16} /> Add to Cart</button>}
                   <div className="offer-price-centered">₦{p.price.toLocaleString()}</div>
                 </>
               )}
@@ -237,8 +279,13 @@ function StoreClient() {
       </div>
       <div className="products-grid">
         {products.filter(p => !p.isSpecialOffer).map((product, i) => (
-          <div key={`prod-${i}`} className="product-card">
-            <div className="product-img-wrapper" onClick={() => setActiveView('cart')} style={{cursor:'pointer', position: 'relative'}}>
+          <div key={`prod-${i}`} className="product-card" style={{position: 'relative'}}>
+            {role !== 'admin' && (
+              <button onClick={() => toggleWishlist(product)} style={{position: 'absolute', top: '8px', right: '8px', zIndex: 2, background: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s'}}>
+                <Heart size={16} color={isInWishlist(product.id) ? '#ef4444' : 'white'} fill={isInWishlist(product.id) ? '#ef4444' : 'none'} />
+              </button>
+            )}
+            <div className="product-img-wrapper" onClick={() => { setSelectedProduct(product); setActiveView('product-details'); }} style={{cursor:'pointer', position: 'relative'}}>
               <img src={product.image} alt={product.name} />
               {product.isSpecialOffer && product.discountPercentage > 0 && (
                 <div className="discount-ribbon">{product.discountPercentage}% Off</div>
@@ -250,7 +297,7 @@ function StoreClient() {
                 <span className="price">₦{product.price.toLocaleString()}</span>
                 <div style={{display: 'flex', gap: '4px'}}>
                   <button className="add-to-cart-small" onClick={() => { setSelectedProduct(product); setActiveView('product-details'); }} style={{background: 'var(--bg-app)', border: '1px solid var(--border-color)', color: 'var(--text-primary)'}}>Details</button>
-                  {role !== 'admin' && <button className="add-to-cart-small" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>}
+                  {role !== 'admin' && <button className="add-to-cart-small" onClick={() => addToCart(product)} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>}
                 </div>
               </div>
             </div>
@@ -289,7 +336,7 @@ function StoreClient() {
               <div className="product-footer">
                 <span className="price">₦{product.price.toLocaleString()}</span>
                 {product.size && <span style={{color: 'var(--text-secondary)', fontSize: '0.85rem'}}>Size: {product.size}</span>}
-                <button className="add-to-cart-small" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>
+                <button className="add-to-cart-small" onClick={() => addToCart(product)} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>
               </div>
             </div>
           </div>
@@ -423,17 +470,40 @@ function StoreClient() {
     <div className="account-container">
       <div className="section-header">
         <h2>My Wishlist</h2>
+        <span style={{color: 'var(--text-secondary)'}}>{wishlist.length} items</span>
       </div>
-      <div className="account-card" style={{padding: '4rem 2rem', textAlign: 'center'}}>
-        <div style={{margin: '0 auto 1.5rem', width: 80, height: 80, background: 'var(--active-bg)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-          <Heart size={36} color="var(--text-secondary)" />
+      {wishlist.length === 0 ? (
+        <div className="account-card" style={{padding: '4rem 2rem', textAlign: 'center'}}>
+          <div style={{margin: '0 auto 1.5rem', width: 80, height: 80, background: 'var(--active-bg)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <Heart size={36} color="var(--text-secondary)" />
+          </div>
+          <h3 style={{color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>No items in your wishlist</h3>
+          <p style={{color: 'var(--text-secondary)', marginBottom: '2rem'}}>Items you save will appear here.</p>
+          <button className="btn-primary" onClick={() => setActiveView('home')} style={{padding: '0.8rem 2rem', borderRadius: '10px'}}>
+            Browse Products
+          </button>
         </div>
-        <h3 style={{color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>No items in your wishlist</h3>
-        <p style={{color: 'var(--text-secondary)', marginBottom: '2rem'}}>Items you save will appear here.</p>
-        <button className="btn-primary" onClick={() => setActiveView('home')} style={{padding: '0.8rem 2rem', borderRadius: '10px'}}>
-          Browse Products
-        </button>
-      </div>
+      ) : (
+        <div className="products-grid">
+          {wishlist.map(product => (
+            <div key={`wish-${product.id}`} className="product-card" style={{position: 'relative'}}>
+              <button onClick={() => toggleWishlist(product)} style={{position: 'absolute', top: '8px', right: '8px', zIndex: 2, background: 'rgba(239,68,68,0.2)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'}}>
+                <Heart size={16} color="#ef4444" fill="#ef4444" />
+              </button>
+              <div className="product-img-wrapper" onClick={() => { setSelectedProduct(product); setActiveView('product-details'); }} style={{cursor:'pointer'}}>
+                <img src={product.image} alt={product.name} />
+              </div>
+              <div className="product-info">
+                <div className="product-name">{product.name}</div>
+                <div className="product-footer">
+                  <span className="price">₦{product.price.toLocaleString()}</span>
+                  <button className="add-to-cart-small" onClick={() => addToCart(product)} style={{display: 'flex', alignItems: 'center', gap: '4px'}}><ShoppingCart size={14} /> Add</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -451,12 +521,12 @@ function StoreClient() {
                   <p className="cart-item-sz">Size: {item.sz}</p>
                 </div>
                 <div className="cart-item-qty">
-                  <button className="qty-btn">-</button>
+                  <button className="qty-btn" onClick={() => updateCartQty(item.id, -1)}>-</button>
                   <span>{item.qty}</span>
-                  <button className="qty-btn">+</button>
+                  <button className="qty-btn" onClick={() => updateCartQty(item.id, 1)}>+</button>
                 </div>
                 <div className="cart-item-price">₦{(item.price * item.qty).toLocaleString()}</div>
-                <button className="cart-item-remove" style={{color: 'var(--text-secondary)'}}><Trash2 size={20} /></button>
+                <button className="cart-item-remove" onClick={() => removeFromCart(item.id)} style={{color: 'var(--text-secondary)'}}><Trash2 size={20} /></button>
               </div>
             ))}
           </div>
@@ -955,13 +1025,18 @@ function StoreClient() {
             )}
 
             {/* Actions */}
-            <div style={{marginTop: 'auto', display: 'flex', gap: '1rem'}}>
+            <div style={{marginTop: 'auto', display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
               {role !== 'admin' && (
-                <button className="btn-primary" onClick={() => setActiveView('cart')} style={{flex: 2, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.1rem', borderRadius: '10px'}}>
-                  <ShoppingCart size={20} /> Add to Cart
-                </button>
+                <>
+                  <button className="btn-primary" onClick={() => addToCart(p)} style={{flex: 2, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.1rem', borderRadius: '10px', minWidth: '140px'}}>
+                    <ShoppingCart size={20} /> Add to Cart
+                  </button>
+                  <button onClick={() => toggleWishlist(p)} style={{padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)', background: isInWishlist(p.id) ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.05)', color: isInWishlist(p.id) ? '#ef4444' : 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s'}}>
+                    <Heart size={20} fill={isInWishlist(p.id) ? '#ef4444' : 'none'} /> {isInWishlist(p.id) ? 'Wishlisted' : 'Wishlist'}
+                  </button>
+                </>
               )}
-              <button className="btn-light" onClick={() => setActiveView('products')} style={{flex: 1, padding: '1rem', fontSize: '1.1rem', borderRadius: '10px'}}>
+              <button className="btn-light" onClick={() => setActiveView('products')} style={{flex: 1, padding: '1rem', fontSize: '1.1rem', borderRadius: '10px', minWidth: '80px'}}>
                 Back
               </button>
             </div>
