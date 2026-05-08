@@ -35,6 +35,7 @@ namespace SolesByS.Api
         public int DiscountPercentage { get; set; }
         public bool IsSpecialOffer { get; set; }
         public decimal Rating { get; set; } = 5.0m;
+        public bool IsAvailable { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

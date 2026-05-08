@@ -12,7 +12,30 @@ const getStoredUser = () => {
 };
 
 function StoreClient() {
-  const [activeView, setActiveView] = useState('home');
+  const [activeView, setActiveViewRaw] = useState('home');
+  const [, setViewHistory] = useState<string[]>(['home']);
+
+  const setActiveView = (view: string) => {
+    setViewHistory(prev => [...prev, view]);
+    window.history.pushState({ view }, '', window.location.pathname);
+    setActiveViewRaw(view);
+  };
+
+  // Handle browser back button
+  useEffect(() => {
+    const handlePop = () => {
+      setViewHistory(prev => {
+        if (prev.length > 1) {
+          const newHistory = prev.slice(0, -1);
+          setActiveViewRaw(newHistory[newHistory.length - 1]);
+          return newHistory;
+        }
+        return prev;
+      });
+    };
+    window.addEventListener('popstate', handlePop);
+    return () => window.removeEventListener('popstate', handlePop);
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<any[]>([]);
   const [role] = useState(localStorage.getItem('role') || 'user');
@@ -101,6 +124,7 @@ function StoreClient() {
                   <p>{p.description}</p>
                   <div className="offer-actions">
                     {role !== 'admin' && <button className="btn-dark" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><ShoppingCart size={16} /> Add to Cart</button>}
+                    <button className="btn-dark" onClick={() => { setSelectedProduct(p); setActiveView('product-details'); }} style={{display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)'}}>Details</button>
                     <span className="offer-price">₦{p.price.toLocaleString()}</span>
                   </div>
                 </div>
@@ -109,6 +133,7 @@ function StoreClient() {
                   <span className="discount-badge">SAVE {p.discountPercentage || 25}%</span>
                   <h3>{p.name}</h3>
                   {role !== 'admin' && <button className="btn-light" onClick={() => setActiveView('cart')} style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}><ShoppingCart size={16} /> Add to Cart</button>}
+                  <button className="btn-light" onClick={() => { setSelectedProduct(p); setActiveView('product-details'); }} style={{display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center'}}>Details</button>
                   <div className="offer-price-centered">₦{p.price.toLocaleString()}</div>
                 </>
               )}
@@ -614,7 +639,7 @@ function StoreClient() {
     );
   };
 
-  const [newProduct, setNewProduct] = useState({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '' });
+  const [newProduct, setNewProduct] = useState({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true });
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -628,7 +653,8 @@ function StoreClient() {
       brand: product.brand || '',
       size: product.size || '',
       isSpecialOffer: product.isSpecialOffer || false,
-      discountPercentage: String(product.discountPercentage || '')
+      discountPercentage: String(product.discountPercentage || ''),
+      isAvailable: product.isAvailable !== false
     });
     setImageFile(null);
     setActiveView('add-product');
@@ -664,7 +690,8 @@ function StoreClient() {
         imageUrl: imageUrl,
         isSpecialOffer: newProduct.isSpecialOffer,
         discountPercentage: newProduct.isSpecialOffer ? (parseInt(newProduct.discountPercentage) || 25) : 0,
-        rating: 5.0
+        rating: 5.0,
+        isAvailable: newProduct.isAvailable
       };
 
       if (editingProduct) {
@@ -685,7 +712,7 @@ function StoreClient() {
         alert('Product added successfully!');
       }
 
-      setNewProduct({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '' });
+      setNewProduct({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true });
       setImageFile(null);
       setEditingProduct(null);
       setActiveView('manage-products');
@@ -701,7 +728,7 @@ function StoreClient() {
     <div className="account-container" style={{maxWidth: '800px'}}>
       <div className="section-header" style={{marginBottom: '2rem'}}>
         <h2>{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
-        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:''}); setImageFile(null); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
+        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setImageFile(null); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
       </div>
       <div className="account-card" style={{padding: '3rem'}}>
         <form onSubmit={handleAddProduct} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
@@ -737,6 +764,10 @@ function StoreClient() {
               <input type="number" min="1" max="99" required placeholder="e.g. 25" value={newProduct.discountPercentage} onChange={e => setNewProduct({...newProduct, discountPercentage: e.target.value})} style={{border: '1px solid var(--border-color)'}} />
             </div>
           )}
+          <div className="auth-form-group" style={{flexDirection: 'row', alignItems: 'center', gap: '1rem'}}>
+            <input type="checkbox" checked={newProduct.isAvailable} onChange={e => setNewProduct({...newProduct, isAvailable: e.target.checked})} style={{width: '20px', height: '20px'}} />
+            <label style={{marginBottom: 0, fontSize: '1rem', color: 'var(--text-primary)'}}>Available for Purchase</label>
+          </div>
           <div className="auth-form-group">
             <label>Product Image {editingProduct && <span style={{color: 'var(--text-secondary)', fontWeight: 400}}>(leave empty to keep current)</span>}</label>
             {editingProduct && <img src={editingProduct.image || editingProduct.imageUrl} alt="Current" style={{width: 80, height: 80, borderRadius: '8px', objectFit: 'cover', marginBottom: '0.5rem', background: 'rgba(255,255,255,0.05)'}} />}
@@ -757,9 +788,9 @@ function StoreClient() {
           <h2>Manage Inventory</h2>
           <span style={{color: 'var(--text-secondary)'}}>{products.length} products total</span>
         </div>
-        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:''}); setImageFile(null); setActiveView('add-product'); }} style={{display: 'flex', alignItems: 'center', gap: '8px'}}><PlusSquare size={18} /> Add New Product</button>
+        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setImageFile(null); setActiveView('add-product'); }} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '0.6rem 1.2rem', fontSize: '0.75rem'}}><PlusSquare size={22} /><span>Add New Product</span></button>
       </div>
-      <div className="account-card" style={{padding: '1.5rem'}}>
+      <div className="account-card" style={{padding: '1.5rem', overflowX: 'auto'}}>
         <table style={{width: '100%', borderCollapse: 'collapse'}}>
           <thead>
             <tr style={{borderBottom: '1px solid var(--border-color)', textAlign: 'left', color: 'var(--text-secondary)'}}>
@@ -767,6 +798,7 @@ function StoreClient() {
               <th style={{padding: '1rem'}}>Price</th>
               <th style={{padding: '1rem'}}>Brand</th>
               <th style={{padding: '1rem'}}>Type</th>
+              <th style={{padding: '1rem'}}>Status</th>
               <th style={{padding: '1rem'}}>Actions</th>
             </tr>
           </thead>
@@ -781,6 +813,9 @@ function StoreClient() {
                 <td style={{padding: '1rem'}}>{p.brand || 'N/A'}</td>
                 <td style={{padding: '1rem'}}>
                   {p.isSpecialOffer ? <span className="verified-badge" style={{background: 'rgba(217,119,6,0.2)', color: '#fbbf24'}}>Special Offer</span> : <span className="verified-badge">Standard</span>}
+                </td>
+                <td style={{padding: '1rem'}}>
+                  {p.isAvailable !== false ? <span className="verified-badge" style={{background: 'rgba(22,163,74,0.2)', color: '#4ade80'}}>In Stock</span> : <span className="verified-badge" style={{background: 'rgba(239,68,68,0.2)', color: '#f87171'}}>Out of Stock</span>}
                 </td>
                 <td style={{padding: '1rem', display: 'flex', gap: '0.75rem'}}>
                   <button onClick={() => handleEditProduct(p)} style={{background: 'none', border: 'none', color: 'var(--active-blue)', cursor: 'pointer'}}><Edit2 size={18}/></button>
@@ -906,7 +941,7 @@ function StoreClient() {
               )}
               <div>
                 <div style={{fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.25rem'}}>Availability</div>
-                <div style={{color: '#10b981', fontWeight: 600}}>In Stock</div>
+                <div style={{color: p.isAvailable !== false ? '#10b981' : '#ef4444', fontWeight: 600}}>{p.isAvailable !== false ? 'In Stock' : 'Out of Stock'}</div>
               </div>
             </div>
 
