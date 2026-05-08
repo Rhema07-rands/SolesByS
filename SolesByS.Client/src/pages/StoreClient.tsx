@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Truck, Headphones, Tag, CreditCard, Package, CheckCircle, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban, Edit2 } from 'lucide-react';
+import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Truck, Headphones, Tag, CreditCard, Package, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban, Edit2 } from 'lucide-react';
 import '../App.css';
 
 const getStoredUser = () => {
