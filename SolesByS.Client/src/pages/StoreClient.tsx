@@ -39,7 +39,7 @@ function StoreClient() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:5294/api/products')
+    fetch('https://solesbys.onrender.com/api/products')
       .then(res => res.json())
       .then(data => {
         if(data && data.length > 0) {
@@ -51,7 +51,7 @@ function StoreClient() {
       .catch(console.error);
 
     if (role === 'admin') {
-      fetch('http://localhost:5294/api/users')
+      fetch('https://solesbys.onrender.com/api/users')
         .then(res => res.json())
         .then(data => setDbUsers(data))
         .catch(console.error);
@@ -593,7 +593,7 @@ function StoreClient() {
         rating: 5.0
       };
 
-      await fetch('http://localhost:5294/api/products', {
+      await fetch('https://solesbys.onrender.com/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productPayload)
@@ -683,7 +683,7 @@ function StoreClient() {
                 <td style={{padding: '1rem'}}>
                   <button onClick={async () => {
                     if(confirm('Delete this product?')) {
-                      await fetch(`http://localhost:5294/api/products/${p.id}`, { method: 'DELETE' });
+                      await fetch(`https://solesbys.onrender.com/api/products/${p.id}`, { method: 'DELETE' });
                       setProducts(products.filter(prod => prod.id !== p.id));
                     }
                   }} style={{background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer'}}><Trash2 size={18}/></button>
@@ -724,14 +724,14 @@ function StoreClient() {
                 </td>
                 <td style={{padding: '1rem', display: 'flex', gap: '1rem'}}>
                   <button onClick={async () => {
-                    await fetch(`http://localhost:5294/api/users/${u.id}/suspend`, { method: 'PUT' });
+                    await fetch(`https://solesbys.onrender.com/api/users/${u.id}/suspend`, { method: 'PUT' });
                     setDbUsers(dbUsers.map(user => user.id === u.id ? {...user, isSuspended: !user.isSuspended} : user));
                   }} style={{background: 'none', border: 'none', color: u.isSuspended ? '#4ade80' : '#fbbf24', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'}}>
                     <Ban size={16}/> {u.isSuspended ? 'Unsuspend' : 'Suspend'}
                   </button>
                   <button onClick={async () => {
                     if(confirm('Permanently delete this user?')) {
-                      await fetch(`http://localhost:5294/api/users/${u.id}`, { method: 'DELETE' });
+                      await fetch(`https://solesbys.onrender.com/api/users/${u.id}`, { method: 'DELETE' });
                       setDbUsers(dbUsers.filter(user => user.id !== u.id));
                     }
                   }} style={{background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer'}}><Trash2 size={16}/></button>
