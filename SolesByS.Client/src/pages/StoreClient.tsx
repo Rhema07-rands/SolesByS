@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Truck, Headphones, Tag, CreditCard, Package, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban, Edit2 } from 'lucide-react';
+import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Truck, Headphones, Tag, CreditCard, Package, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban, Edit2, Menu, X } from 'lucide-react';
 import '../App.css';
 
 const getStoredUser = () => {
@@ -13,6 +13,7 @@ const getStoredUser = () => {
 
 function StoreClient() {
   const [activeView, setActiveViewRaw] = useState('home');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [, setViewHistory] = useState<string[]>(['home']);
 
   const setActiveView = (view: string) => {
@@ -972,37 +973,41 @@ function StoreClient() {
 
   return (
     <div className="layout">
+      {/* Sidebar Overlay */}
+      <div className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`} onClick={() => setSidebarOpen(false)} />
+
       {/* Sidebar Navigation */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
           {currentUser.avatar ? (
             <img src={currentUser.avatar} alt="User" style={{width: 36, height: 36, borderRadius: '50%', objectFit: 'cover'}} />
           ) : (
             <div style={{width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 700, color: 'white', flexShrink: 0}}>{(currentUser.name || 'G').charAt(0).toUpperCase()}</div>
           )}
-          <span className="logo-text" style={{fontSize: '1rem', fontWeight: 600}}>{currentUser.name || 'Guest'}</span>
+          <span className="logo-text" style={{fontSize: '1rem', fontWeight: 600, flex: 1}}>{currentUser.name || 'Guest'}</span>
+          <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}><X size={22} /></button>
         </div>
         
         <nav className="sidebar-nav">
           <div className="nav-group">
-            <div className={`nav-item ${activeView === 'home' ? 'active-parent' : ''}`} onClick={() => setActiveView('home')}>
+            <div className={`nav-item ${activeView === 'home' ? 'active-parent' : ''}`} onClick={() => { setActiveView('home'); setSidebarOpen(false); }}>
               <span className="nav-icon"><Store size={18} /></span> Home
             </div>
-            <div className={`nav-item ${activeView === 'products' ? 'active-parent' : ''}`} onClick={() => setActiveView('products')}>
+            <div className={`nav-item ${activeView === 'products' ? 'active-parent' : ''}`} onClick={() => { setActiveView('products'); setSidebarOpen(false); }}>
               <span className="nav-icon"><ShoppingBag size={18} /></span> All Products
             </div>
             {role !== 'admin' && (
               <>
-                <div className={`nav-item ${activeView === 'cart' ? 'active-parent' : ''}`} onClick={() => setActiveView('cart')}>
+                <div className={`nav-item ${activeView === 'cart' ? 'active-parent' : ''}`} onClick={() => { setActiveView('cart'); setSidebarOpen(false); }}>
                   <span className="nav-icon"><ShoppingCart size={18} /></span> Cart
                 </div>
-                <div className={`nav-item ${activeView === 'wishlist' ? 'active-parent' : ''}`} onClick={() => setActiveView('wishlist')}>
+                <div className={`nav-item ${activeView === 'wishlist' ? 'active-parent' : ''}`} onClick={() => { setActiveView('wishlist'); setSidebarOpen(false); }}>
                   <span className="nav-icon"><Heart size={18} /></span> Wishlist
                 </div>
-                <div className={`nav-item ${activeView === 'checkout' ? 'active-parent' : ''}`} onClick={() => setActiveView('checkout')}>
+                <div className={`nav-item ${activeView === 'checkout' ? 'active-parent' : ''}`} onClick={() => { setActiveView('checkout'); setSidebarOpen(false); }}>
                   <span className="nav-icon"><CreditCard size={18} /></span> Checkout
                 </div>
-                <div className={`nav-item ${activeView === 'orders' ? 'active-parent' : ''}`} onClick={() => setActiveView('orders')}>
+                <div className={`nav-item ${activeView === 'orders' ? 'active-parent' : ''}`} onClick={() => { setActiveView('orders'); setSidebarOpen(false); }}>
                   <span className="nav-icon"><Package size={18} /></span> My Orders
                 </div>
               </>
@@ -1013,13 +1018,13 @@ function StoreClient() {
             <>
               <div className="nav-section-title">ADMINISTRATION</div>
               <div className="nav-group">
-                <div className={`nav-item ${activeView === 'manage-products' ? 'active-parent' : ''}`} onClick={() => setActiveView('manage-products')}>
+                <div className={`nav-item ${activeView === 'manage-products' ? 'active-parent' : ''}`} onClick={() => { setActiveView('manage-products'); setSidebarOpen(false); }}>
                   <span className="nav-icon"><List size={18} /></span> Manage Inventory
                 </div>
-                <div className={`nav-item ${activeView === 'add-product' ? 'active-parent' : ''}`} onClick={() => setActiveView('add-product')}>
+                <div className={`nav-item ${activeView === 'add-product' ? 'active-parent' : ''}`} onClick={() => { setActiveView('add-product'); setSidebarOpen(false); }}>
                   <span className="nav-icon"><PlusSquare size={18} /></span> Add Product
                 </div>
-                <div className={`nav-item ${activeView === 'manage-users' ? 'active-parent' : ''}`} onClick={() => setActiveView('manage-users')}>
+                <div className={`nav-item ${activeView === 'manage-users' ? 'active-parent' : ''}`} onClick={() => { setActiveView('manage-users'); setSidebarOpen(false); }}>
                   <span className="nav-icon"><Users size={18} /></span> Manage Users
                 </div>
               </div>
@@ -1028,11 +1033,11 @@ function StoreClient() {
 
           <div className="nav-section-title">USER</div>
           <div className="nav-group">
-            <div className={`nav-item ${activeView === 'account' ? 'active-parent' : ''}`} onClick={() => setActiveView('account')}>
+            <div className={`nav-item ${activeView === 'account' ? 'active-parent' : ''}`} onClick={() => { setActiveView('account'); setSidebarOpen(false); }}>
               <span className="nav-icon"><Settings size={18} /></span> My Account
             </div>
 
-            <div className="nav-item" onClick={() => { localStorage.removeItem('role'); localStorage.removeItem('user'); navigate('/login'); }}>
+            <div className="nav-item" onClick={() => { setSidebarOpen(false); localStorage.removeItem('role'); localStorage.removeItem('user'); navigate('/login'); }}>
               <span className="nav-icon"><LogOut size={18} /></span> Sign Out
             </div>
           </div>
@@ -1043,8 +1048,13 @@ function StoreClient() {
       <main className="main-content">
         {/* Top Header */}
         <header className="top-header">
-          <div style={{ fontSize: '1.4rem', fontWeight: 900, letterSpacing: '0.1em', background: 'linear-gradient(to right, #f8fafc, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            SOLES BY S
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button className="hamburger-btn" onClick={() => setSidebarOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <div style={{ fontSize: '1.4rem', fontWeight: 900, letterSpacing: '0.1em', background: 'linear-gradient(to right, #f8fafc, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              SOLES BY S
+            </div>
           </div>
           <div className="header-actions">
             <button className="icon-btn" onClick={() => setActiveView('account')}>
