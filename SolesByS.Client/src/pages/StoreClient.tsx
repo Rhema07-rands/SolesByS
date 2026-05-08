@@ -40,6 +40,13 @@ function StoreClient() {
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<any[]>([]);
   const [wishlist, setWishlist] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('solesbys_orders');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   // Cart functions
   const addToCart = (product: any) => {
@@ -451,18 +458,103 @@ function StoreClient() {
     <div className="account-container">
       <div className="section-header">
         <h2>Order History</h2>
-        <span style={{color: 'var(--text-secondary)'}}>0 Orders</span>
+        <span style={{color: 'var(--text-secondary)'}}>{orders.length} Order{orders.length !== 1 ? 's' : ''}</span>
       </div>
-      <div className="account-card" style={{padding: '4rem 2rem', textAlign: 'center'}}>
-        <div style={{margin: '0 auto 1.5rem', width: 80, height: 80, background: 'var(--active-bg)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-          <Package size={36} color="var(--text-secondary)" />
+      {orders.length === 0 ? (
+        <div className="account-card" style={{padding: '4rem 2rem', textAlign: 'center'}}>
+          <div style={{margin: '0 auto 1.5rem', width: 80, height: 80, background: 'var(--active-bg)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <Package size={36} color="var(--text-secondary)" />
+          </div>
+          <h3 style={{color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>No orders yet</h3>
+          <p style={{color: 'var(--text-secondary)', marginBottom: '2rem'}}>When you place an order, it will appear here.</p>
+          <button className="btn-primary" onClick={() => setActiveView('home')} style={{padding: '0.8rem 2rem', borderRadius: '10px'}}>
+            Start Shopping
+          </button>
         </div>
-        <h3 style={{color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '1.3rem'}}>No orders yet</h3>
-        <p style={{color: 'var(--text-secondary)', marginBottom: '2rem'}}>When you place an order, it will appear here.</p>
-        <button className="btn-primary" onClick={() => setActiveView('home')} style={{padding: '0.8rem 2rem', borderRadius: '10px'}}>
-          Start Shopping
-        </button>
-      </div>
+      ) : (
+        <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+          {orders.map((order: any) => {
+            const isExpanded = expandedOrder === order.id;
+            const orderDate = new Date(order.date);
+            return (
+              <div key={order.id} className="account-card" style={{padding: 0, overflow: 'hidden'}}>
+                {/* Order header - clickable to expand */}
+                <div
+                  onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                  style={{padding: '1.25rem 1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', transition: 'background 0.2s'}}
+                >
+                  <div style={{width: 44, height: 44, borderRadius: '12px', background: 'var(--active-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0}}>
+                    <Package size={22} color="var(--active-blue)" />
+                  </div>
+                  <div style={{flex: 1, minWidth: '120px'}}>
+                    <div style={{fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem'}}>{order.id}</div>
+                    <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>
+                      {orderDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {orderDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div style={{fontWeight: 700, color: 'var(--text-primary)', fontSize: '1.05rem'}}>₦{order.total.toLocaleString()}</div>
+                  <span style={{fontSize: '0.8rem', fontWeight: 600, padding: '0.3rem 0.75rem', borderRadius: '20px', background: 'rgba(16,185,129,0.15)', color: '#10b981'}}>
+                    {order.status}
+                  </span>
+                  <span style={{color: 'var(--text-secondary)', fontSize: '1.2rem', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}}>▾</span>
+                </div>
+
+                {/* Expanded order details */}
+                {isExpanded && (
+                  <div style={{borderTop: '1px solid var(--border-color)', padding: '1.25rem 1.5rem', background: 'rgba(0,0,0,0.15)'}}>
+                    {/* Items list */}
+                    <div style={{fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em'}}>Items Ordered</div>
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem'}}>
+                      {order.items.map((item: any, idx: number) => (
+                        <div key={idx} style={{display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: 'var(--bg-card)', borderRadius: '10px', border: '1px solid var(--border-color)'}}>
+                          <img src={item.image} alt={item.name} style={{width: 50, height: 50, borderRadius: '8px', objectFit: 'cover', background: 'rgba(255,255,255,0.05)'}} />
+                          <div style={{flex: 1}}>
+                            <div style={{fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)'}}>{item.name}</div>
+                            <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>Size: {item.sz} &middot; Qty: {item.qty}</div>
+                          </div>
+                          <div style={{fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem'}}>₦{(item.price * item.qty).toLocaleString()}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Order summary */}
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', padding: '1rem', background: 'var(--bg-app)', borderRadius: '10px', border: '1px solid var(--border-color)', fontSize: '0.85rem'}}>
+                      <div>
+                        <div style={{color: 'var(--text-secondary)', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.2rem'}}>Subtotal</div>
+                        <div style={{color: 'var(--text-primary)', fontWeight: 600}}>₦{order.subtotal.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div style={{color: 'var(--text-secondary)', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.2rem'}}>Tax</div>
+                        <div style={{color: 'var(--text-primary)', fontWeight: 600}}>₦{order.tax.toLocaleString()}</div>
+                      </div>
+                      <div>
+                        <div style={{color: 'var(--text-secondary)', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.2rem'}}>Shipping</div>
+                        <div style={{color: '#10b981', fontWeight: 600}}>Free</div>
+                      </div>
+                      <div>
+                        <div style={{color: 'var(--text-secondary)', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.2rem'}}>Total</div>
+                        <div style={{color: 'var(--active-blue)', fontWeight: 700, fontSize: '1.05rem'}}>₦{order.total.toLocaleString()}</div>
+                      </div>
+                    </div>
+
+                    {/* Customer info */}
+                    {order.customer && (
+                      <div style={{marginTop: '1rem', padding: '1rem', background: 'var(--bg-app)', borderRadius: '10px', border: '1px solid var(--border-color)', fontSize: '0.85rem'}}>
+                        <div style={{color: 'var(--text-secondary)', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.5rem', letterSpacing: '0.05em'}}>Shipping Details</div>
+                        <div style={{color: 'var(--text-primary)'}}>{order.customer.name}</div>
+                        <div style={{color: 'var(--text-secondary)'}}>{order.customer.email}</div>
+                        {order.customer.phone && <div style={{color: 'var(--text-secondary)'}}>{order.customer.phone}</div>}
+                        {order.customer.address && <div style={{color: 'var(--text-secondary)', marginTop: '0.25rem'}}>{order.customer.address}</div>}
+                        {order.notes && <div style={{color: 'var(--text-secondary)', marginTop: '0.5rem', fontStyle: 'italic'}}>Notes: {order.notes}</div>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 
@@ -658,6 +750,22 @@ function StoreClient() {
                 'y_0cBKXpEZWojP39z'
               );
               
+              // Save order to history
+              const newOrder = {
+                id: 'ORD-' + Date.now().toString(36).toUpperCase(),
+                date: new Date().toISOString(),
+                items: cart.map(item => ({ ...item })),
+                subtotal: cartSubtotal,
+                tax: cartTax,
+                total: cartTotal,
+                customer: { name: nameInput, email: emailInput, phone: phoneInput, address: addressInput },
+                notes: notesInput,
+                status: 'Processing'
+              };
+              const updatedOrders = [newOrder, ...orders];
+              setOrders(updatedOrders);
+              localStorage.setItem('solesbys_orders', JSON.stringify(updatedOrders));
+
               setCart([]);
               setActiveView('order-success');
             } catch (err) {
