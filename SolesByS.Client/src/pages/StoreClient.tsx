@@ -144,7 +144,7 @@ function StoreClient() {
           <span className="search-icon"><Search size={18} /></span>
           <input 
             type="text" 
-            placeholder="Search shop (press Enter to search)" 
+            placeholder="Search shop" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
