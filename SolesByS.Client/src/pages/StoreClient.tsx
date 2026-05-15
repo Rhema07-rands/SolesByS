@@ -744,10 +744,10 @@ function StoreClient() {
               const emailjs = await import('@emailjs/browser');
               
               await emailjs.send(
-                'service_hwhjrqg', 
-                'template_ydjj7t7', 
+                import.meta.env.VITE_EMAILJS_SERVICE_ID, 
+                import.meta.env.VITE_EMAILJS_TEMPLATE_ID, 
                 templateParams, 
-                'y_0cBKXpEZWojP39z'
+                import.meta.env.VITE_EMAILJS_PUBLIC_KEY
               );
               
               // Save order to history
