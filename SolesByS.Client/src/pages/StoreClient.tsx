@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Truck, Headphones, Tag, CreditCard, Package, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban, Edit2, Menu, X } from 'lucide-react';
+import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Headphones, Tag, CreditCard, Package, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban, Edit2, Menu, X } from 'lucide-react';
 import '../App.css';
 
 const getStoredUser = () => {
@@ -222,13 +222,7 @@ function StoreClient() {
       </div>
 
       <div className="features-grid" style={{marginTop: '3.5rem'}}>
-        <div className="feature-card">
-          <div className="feature-icon text-blue"><Truck size={32} /></div>
-          <div>
-            <div className="feature-title">Free Delivery</div>
-            <div className="feature-desc">No extra shipping costs</div>
-          </div>
-        </div>
+
         <div className="feature-card">
           <div className="feature-icon text-green"><Headphones size={32} /></div>
           <div>
