@@ -127,9 +127,22 @@ function StoreClient() {
     }
   }, [role, activeView]);
 
+  const [shippingMethod, setShippingMethod] = useState('delivery'); // 'delivery', 'pickup'
+  
+  const getShippingCost = () => {
+    return 0; // No shipping fees
+  };
+
+  const getShippingLabel = () => {
+    switch(shippingMethod) {
+      case 'delivery': return 'Delivery';
+      case 'pickup': return 'Pick Up';
+      default: return '';
+    }
+  };
+
   const cartSubtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const cartTax = cartSubtotal * 0.05;
-  const cartTotal = cartSubtotal + cartTax;
+  const cartTotal = cartSubtotal + (activeView === 'checkout' ? getShippingCost() : 0);
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim() !== '') {
@@ -518,12 +531,8 @@ function StoreClient() {
                         <div style={{color: 'var(--text-primary)', fontWeight: 600}}>₦{order.subtotal.toLocaleString()}</div>
                       </div>
                       <div>
-                        <div style={{color: 'var(--text-secondary)', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.2rem'}}>Tax</div>
-                        <div style={{color: 'var(--text-primary)', fontWeight: 600}}>₦{order.tax.toLocaleString()}</div>
-                      </div>
-                      <div>
-                        <div style={{color: 'var(--text-secondary)', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.2rem'}}>Shipping</div>
-                        <div style={{color: '#10b981', fontWeight: 600}}>Free</div>
+                        <div style={{color: 'var(--text-secondary)', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.2rem'}}>Delivery</div>
+                        <div style={{color: 'var(--text-primary)', fontWeight: 600}}>{order.shippingLabel}</div>
                       </div>
                       <div>
                         <div style={{color: 'var(--text-secondary)', fontSize: '0.7rem', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.2rem'}}>Total</div>
@@ -626,12 +635,8 @@ function StoreClient() {
               <span>₦{cartSubtotal.toLocaleString()}</span>
             </div>
             <div className="summary-row">
-              <span>Estimated Tax</span>
-              <span>₦{cartTax.toLocaleString()}</span>
-            </div>
-            <div className="summary-row">
-              <span>Shipping</span>
-              <span className="text-green">Free</span>
+              <span>Delivery</span>
+              <span className="text-green">Calculated at checkout</span>
             </div>
             <div className="summary-divider"></div>
             <div className="summary-row total-row">
@@ -676,6 +681,26 @@ function StoreClient() {
             </div>
           </div>
         </div>
+        
+        <div className="checkout-panel">
+          <h3 className="panel-title">Delivery Method</h3>
+          <div className="payment-options">
+            <div className={`payment-option ${shippingMethod === 'delivery' ? 'selected' : ''}`} onClick={() => setShippingMethod('delivery')}>
+              <div className={`radio-circle ${shippingMethod === 'delivery' ? 'active-radio' : ''}`}></div>
+              <div className="payment-info">
+                <strong>Delivery</strong>
+                <span>Home delivery</span>
+              </div>
+            </div>
+            <div className={`payment-option ${shippingMethod === 'pickup' ? 'selected' : ''}`} onClick={() => setShippingMethod('pickup')}>
+              <div className={`radio-circle ${shippingMethod === 'pickup' ? 'active-radio' : ''}`}></div>
+              <div className="payment-info">
+                <strong>Pick Up</strong>
+                <span>Pick up at our location</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="cart-summary-section">
@@ -693,6 +718,14 @@ function StoreClient() {
             ))}
           </div>
           <div className="summary-divider"></div>
+          <div className="summary-row">
+            <span>Subtotal</span>
+            <span>₦{cartSubtotal.toLocaleString()}</span>
+          </div>
+          <div className="summary-row">
+            <span>Delivery</span>
+            <span>{getShippingLabel()}</span>
+          </div>
           <div className="summary-row total-row">
             <span>Total to pay</span>
             <span style={{color: 'var(--active-blue)'}}>₦{cartTotal.toLocaleString()}</span>
@@ -727,6 +760,12 @@ function StoreClient() {
                   </tr>
                 `;
               });
+              orderHtml += `
+                  <tr style="border-bottom: 1px solid #eee;">
+                    <td colspan="2" style="padding: 10px; text-align: right;"><strong>Delivery Method:</strong></td>
+                    <td style="padding: 10px;"><strong>${getShippingLabel()}</strong></td>
+                  </tr>
+              `;
               orderHtml += `</table><h3 style="text-align:right; color:#16a34a;">Total: ₦${cartTotal.toLocaleString()}</h3>`;
 
               const templateParams = {
@@ -750,7 +789,9 @@ function StoreClient() {
                 date: new Date().toISOString(),
                 items: cart.map(item => ({ ...item })),
                 subtotal: cartSubtotal,
-                tax: cartTax,
+                shippingCost: getShippingCost(),
+                shippingLabel: getShippingLabel(),
+                shippingMethod: shippingMethod,
                 total: cartTotal,
                 customer: { name: nameInput, email: emailInput, phone: phoneInput, address: addressInput },
                 notes: notesInput,
