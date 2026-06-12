@@ -135,7 +135,7 @@ function StoreClient() {
 
   const getShippingLabel = () => {
     switch(shippingMethod) {
-      case 'delivery': return 'Delivery';
+      case 'delivery': return 'Home Delivery';
       case 'pickup': return 'Pick Up';
       default: return '';
     }
@@ -689,7 +689,7 @@ function StoreClient() {
               <div className={`radio-circle ${shippingMethod === 'delivery' ? 'active-radio' : ''}`}></div>
               <div className="payment-info">
                 <strong>Home Delivery</strong>
-                <span>extra cost will be included</span>
+                <span>Extra cost will be included</span>
               </div>
             </div>
             <div className={`payment-option ${shippingMethod === 'pickup' ? 'selected' : ''}`} onClick={() => setShippingMethod('pickup')}>
