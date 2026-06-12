@@ -688,8 +688,8 @@ function StoreClient() {
             <div className={`payment-option ${shippingMethod === 'delivery' ? 'selected' : ''}`} onClick={() => setShippingMethod('delivery')}>
               <div className={`radio-circle ${shippingMethod === 'delivery' ? 'active-radio' : ''}`}></div>
               <div className="payment-info">
-                <strong>Delivery</strong>
-                <span>Home delivery</span>
+                <strong>Home Delivery</strong>
+                <span>extra cost will be included</span>
               </div>
             </div>
             <div className={`payment-option ${shippingMethod === 'pickup' ? 'selected' : ''}`} onClick={() => setShippingMethod('pickup')}>
