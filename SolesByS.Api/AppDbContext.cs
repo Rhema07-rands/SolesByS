@@ -8,6 +8,15 @@ namespace SolesByS.Api
 
         public DbSet<ProductEntity> Products { get; set; } = null!;
         public DbSet<UserEntity> Users { get; set; } = null!;
+        public DbSet<CartEntity> Carts { get; set; } = null!;
+    }
+
+    public class CartEntity
+    {
+        [System.ComponentModel.DataAnnotations.Key]
+        public int UserId { get; set; }
+        public string CartData { get; set; } = string.Empty;
+        public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     }
 
     public class UserEntity

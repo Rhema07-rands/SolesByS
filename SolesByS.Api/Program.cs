@@ -39,6 +39,7 @@ using (var scope = app.Services.CreateScope())
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Password longtext;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN Size longtext;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN IsAvailable tinyint(1) DEFAULT 1;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS Carts (UserId INT PRIMARY KEY, CartData LONGTEXT, LastUpdated DATETIME(6));"); } catch { }
         Console.WriteLine("Database connected successfully.");
     }
     catch (Exception ex)
@@ -160,6 +161,32 @@ app.MapPost("/api/login", async ([FromBody] LoginRequest req, AppDbContext db) =
         return Results.Ok(new { role = "user", id = user.Id, name = user.Name, email = user.Email, phone = user.Phone, address = user.Address, avatar = user.Avatar });
     }
     return Results.Unauthorized();
+});
+
+app.MapGet("/api/cart/{userId}", async (int userId, AppDbContext db) =>
+{
+    var cart = await db.Carts.FindAsync(userId);
+    if (cart is null) return Results.NotFound();
+    return Results.Ok(cart);
+});
+
+public class CartRequest { public string CartData { get; set; } = string.Empty; }
+
+app.MapPost("/api/cart/{userId}", async (int userId, [FromBody] CartRequest req, AppDbContext db) =>
+{
+    var cart = await db.Carts.FindAsync(userId);
+    if (cart is null)
+    {
+        cart = new CartEntity { UserId = userId, CartData = req.CartData, LastUpdated = DateTime.UtcNow };
+        db.Carts.Add(cart);
+    }
+    else
+    {
+        cart.CartData = req.CartData;
+        cart.LastUpdated = DateTime.UtcNow;
+    }
+    await db.SaveChangesAsync();
+    return Results.Ok(cart);
 });
 
 app.MapGet("/api/sign-upload", () => {

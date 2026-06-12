@@ -38,8 +38,27 @@ function StoreClient() {
     return () => window.removeEventListener('popstate', handlePop);
   }, []);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cart, setCart] = useState<any[]>([]);
-  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [cart, setCart] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('solesbys_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [wishlist, setWishlist] = useState<any[]>(() => {
+    try {
+      const saved = localStorage.getItem('solesbys_wishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('solesbys_cart', JSON.stringify(cart));
+  }, [cart]);
+
+  useEffect(() => {
+    localStorage.setItem('solesbys_wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
+
   const [orders, setOrders] = useState<any[]>(() => {
     try {
       const saved = localStorage.getItem('solesbys_orders');
@@ -89,6 +108,41 @@ function StoreClient() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [currentUser, setCurrentUser] = useState(getStoredUser);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Background sync to DB after 5 minutes
+    if (currentUser?.id) {
+      const timer = setTimeout(() => {
+        fetch(`https://solesbys.onrender.com/api/cart/${currentUser.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cartData: JSON.stringify(cart) })
+        }).catch((err) => console.error("Cart sync failed", err));
+      }, 300000); // 5 minutes
+      
+      return () => clearTimeout(timer);
+    }
+  }, [cart, currentUser?.id]);
+
+  // Load cart from DB if user logs in and local cart is empty
+  useEffect(() => {
+    if (currentUser?.id && cart.length === 0) {
+      fetch(`https://solesbys.onrender.com/api/cart/${currentUser.id}`)
+        .then(res => {
+          if (res.ok) return res.json();
+          throw new Error('No cart in DB');
+        })
+        .then(data => {
+          if (data && data.cartData) {
+            const dbCart = JSON.parse(data.cartData);
+            if (Array.isArray(dbCart) && dbCart.length > 0) {
+              setCart(dbCart);
+            }
+          }
+        })
+        .catch(() => console.log('No existing DB cart found or failed to load.'));
+    }
+  }, [currentUser?.id, cart.length]);
 
   // Editable account form state
   const [editName, setEditName] = useState(currentUser.name || '');
