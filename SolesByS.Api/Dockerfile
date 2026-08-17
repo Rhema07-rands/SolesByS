@@ -18,5 +18,7 @@ COPY --from=build /app/publish .
 # Expose port 8080 (Render uses this by default)
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_USE_POLLING_FILE_WATCHER=1
+ENV DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE=false
 
 ENTRYPOINT ["dotnet", "SolesByS.Api.dll"]
