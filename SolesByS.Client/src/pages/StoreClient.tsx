@@ -3,6 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Settings, Store, ShoppingCart, Heart, Trash2, Headphones, Tag, CreditCard, Package, PartyPopper, LogOut, ShoppingBag, Users, PlusSquare, List, Ban, Edit2, Menu, X } from 'lucide-react';
 import '../App.css';
 
+const colorToCss = (name: string): string => {
+  const m: Record<string,string> = {
+    black:'#111',white:'#f0f0f0',red:'#ef4444',blue:'#3b82f6',green:'#22c55e',
+    yellow:'#eab308',orange:'#f97316',purple:'#a855f7',pink:'#ec4899',
+    gray:'#6b7280',grey:'#6b7280',brown:'#78350f',navy:'#1e3a8a',beige:'#d4b896',
+    cream:'#fef9ef',gold:'#fbbf24',silver:'#94a3b8',tan:'#c9a87c',
+    maroon:'#7f1d1d',teal:'#0d9488',cyan:'#06b6d4',lime:'#84cc16',
+    rose:'#f43f5e',violet:'#8b5cf6',
+  };
+  return m[name.toLowerCase().trim()] || '#6b7280';
+};
+
+type VariantItem = {color:string; imageUrl:string; file:File|null; preview:string};
+
+const parseVariants = (product: any): {color:string;imageUrl:string}[] => {
+  try { if (product.variants) return JSON.parse(product.variants); } catch {}
+  return [];
+};
+
 const getStoredUser = () => {
   try {
     const raw = localStorage.getItem('user');
@@ -104,8 +123,10 @@ function StoreClient() {
   const isInWishlist = (id: number) => wishlist.some(item => item.id === id);
   const [role] = useState(localStorage.getItem('role') || 'user');
   const [products, setProducts] = useState<any[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [dbUsers, setDbUsers] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
   const [currentUser, setCurrentUser] = useState(getStoredUser);
   const navigate = useNavigate();
 
@@ -161,17 +182,20 @@ function StoreClient() {
     setEditAvatarFile(null);
   }, []);
 
+  useEffect(() => { setSelectedVariantIdx(0); }, [selectedProduct]);
+
   useEffect(() => {
+    setProductsLoading(true);
     fetch('https://solesbys.onrender.com/api/products')
       .then(res => res.json())
       .then(data => {
         if(data && data.length > 0) {
-          // Add default sz/qty properties for the client logic
           const mapped = data.map((d: any) => ({...d, image: d.imageUrl, rating: d.rating || 5}));
           setProducts(mapped);
         }
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setProductsLoading(false));
 
     if (role === 'admin') {
       fetch('https://solesbys.onrender.com/api/users')
@@ -216,9 +240,15 @@ function StoreClient() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
           />
-
         </div>
       </div>
+
+      {productsLoading ? (
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem',gap:'1rem'}}>
+          <div style={{width:40,height:40,border:'3px solid rgba(255,255,255,0.1)',borderTop:'3px solid var(--active-blue)',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />
+          <span style={{color:'var(--text-secondary)'}}>Loading products...</span>
+        </div>
+      ) : (<>
 
 
       <div className="section-header">
@@ -276,6 +306,7 @@ function StoreClient() {
             </div>
             <div className="product-info">
               <div className="product-name">{product.name}</div>
+              {(() => { const pv=parseVariants(product); return pv.length>0 ? <div style={{display:'flex',gap:'4px',marginTop:'4px',flexWrap:'wrap'}}>{pv.slice(0,6).map((v,i)=><div key={i} title={v.color} style={{width:11,height:11,borderRadius:'50%',background:colorToCss(v.color),border:'1px solid rgba(255,255,255,0.25)',flexShrink:0}} />)}{pv.length>6&&<span style={{fontSize:'0.65rem',color:'var(--text-secondary)'}}>+{pv.length-6}</span>}</div> : null; })()}
               <div className="product-footer">
                 <span className="price">₦{product.price.toLocaleString()}</span>
                 <div style={{display: 'flex', gap: '4px'}}>
@@ -305,7 +336,8 @@ function StoreClient() {
           </div>
         </div>
       </div>
-    </>
+    </>)}
+  </>
   );
 
   const renderProductsContent = () => (
@@ -313,6 +345,13 @@ function StoreClient() {
       <div className="section-header" style={{marginBottom: '2rem'}}>
         <h2>All Special Products</h2>
       </div>
+
+      {productsLoading ? (
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem',gap:'1rem'}}>
+          <div style={{width:40,height:40,border:'3px solid rgba(255,255,255,0.1)',borderTop:'3px solid var(--active-blue)',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />
+          <span style={{color:'var(--text-secondary)'}}>Loading products...</span>
+        </div>
+      ) : (<>
 
       <div className="special-offers-grid" style={{marginBottom: '4rem'}}>
         {products.filter(p => p.isSpecialOffer).map((p, i) => (
@@ -361,6 +400,7 @@ function StoreClient() {
             </div>
             <div className="product-info">
               <div className="product-name">{product.name}</div>
+              {(() => { const pv=parseVariants(product); return pv.length>0 ? <div style={{display:'flex',gap:'4px',marginTop:'4px',flexWrap:'wrap'}}>{pv.slice(0,6).map((v,i)=><div key={i} title={v.color} style={{width:11,height:11,borderRadius:'50%',background:colorToCss(v.color),border:'1px solid rgba(255,255,255,0.25)',flexShrink:0}} />)}{pv.length>6&&<span style={{fontSize:'0.65rem',color:'var(--text-secondary)'}}>+{pv.length-6}</span>}</div> : null; })()}
               <div className="product-footer">
                 <span className="price">₦{product.price.toLocaleString()}</span>
                 <div style={{display: 'flex', gap: '4px'}}>
@@ -372,6 +412,8 @@ function StoreClient() {
           </div>
         ))}
       </div>
+    </>
+    )}
     </div>
   );
 
@@ -915,7 +957,7 @@ function StoreClient() {
 
   const [newProduct, setNewProduct] = useState({ name: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true });
   const [uploading, setUploading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [variants, setVariants] = useState<VariantItem[]>([{color:'',imageUrl:'',file:null,preview:''}]);
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
   const handleEditProduct = (product: any) => {
@@ -929,37 +971,48 @@ function StoreClient() {
       discountPercentage: String(product.discountPercentage || ''),
       isAvailable: product.isAvailable !== false
     });
-    setImageFile(null);
+    const existing = parseVariants(product);
+    if (existing.length > 0) {
+      setVariants(existing.map(v => ({color:v.color, imageUrl:v.imageUrl, file:null, preview:v.imageUrl})));
+    } else {
+      const img = product.imageUrl || product.image || '';
+      setVariants([{color:'', imageUrl:img, file:null, preview:img}]);
+    }
     setActiveView('add-product');
   };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFile && !editingProduct) return alert('Please select an image');
+    const hasImage = variants.some(v => v.file || v.imageUrl);
+    if (!hasImage && !editingProduct) return alert('Please add at least one product image');
     setUploading(true);
     try {
-      let imageUrl = editingProduct?.image || editingProduct?.imageUrl || '';
-      
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        formData.append('upload_preset', 'SOLESBYS');
-        
-        const uploadRes = await fetch('https://api.cloudinary.com/v1_1/dr5nd8kr2/image/upload', {
-          method: 'POST',
-          body: formData
-        });
-        if(!uploadRes.ok) throw new Error("Cloudinary upload failed");
-        const uploadData = await uploadRes.json();
-        imageUrl = uploadData.secure_url;
-      }
-      
+      const uploadedVariants = (await Promise.all(
+        variants.map(async (v) => {
+          if (v.file) {
+            const fd = new FormData();
+            fd.append('file', v.file);
+            fd.append('upload_preset', 'SOLESBYS');
+            const up = await fetch('https://api.cloudinary.com/v1_1/dr5nd8kr2/image/upload', {method:'POST',body:fd});
+            if (!up.ok) throw new Error('Upload failed');
+            const ud = await up.json();
+            return {color: v.color, imageUrl: ud.secure_url};
+          } else if (v.imageUrl) {
+            return {color: v.color, imageUrl: v.imageUrl};
+          }
+          return null;
+        })
+      )).filter(Boolean) as {color:string;imageUrl:string}[];
+
+      const primaryImageUrl = uploadedVariants[0]?.imageUrl || editingProduct?.imageUrl || editingProduct?.image || '';
+
       const productPayload = {
         name: newProduct.name,
         price: parseFloat(newProduct.price),
         brand: newProduct.brand,
         size: newProduct.size,
-        imageUrl: imageUrl,
+        imageUrl: primaryImageUrl,
+        variants: JSON.stringify(uploadedVariants),
         isSpecialOffer: newProduct.isSpecialOffer,
         discountPercentage: newProduct.isSpecialOffer ? (parseInt(newProduct.discountPercentage) || 25) : 0,
         rating: 5.0,
@@ -967,25 +1020,23 @@ function StoreClient() {
       };
 
       if (editingProduct) {
-        // UPDATE existing product
         await fetch(`https://solesbys.onrender.com/api/products/${editingProduct.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {'Content-Type':'application/json'},
           body: JSON.stringify(productPayload)
         });
         alert('Product updated successfully!');
       } else {
-        // CREATE new product
         await fetch('https://solesbys.onrender.com/api/products', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {'Content-Type':'application/json'},
           body: JSON.stringify(productPayload)
         });
         alert('Product added successfully!');
       }
 
-      setNewProduct({ name: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true });
-      setImageFile(null);
+      setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true});
+      setVariants([{color:'',imageUrl:'',file:null,preview:''}]);
       setEditingProduct(null);
       setActiveView('manage-products');
     } catch (err) {
@@ -1000,7 +1051,7 @@ function StoreClient() {
     <div className="account-container" style={{maxWidth: '800px'}}>
       <div className="section-header" style={{marginBottom: '2rem'}}>
         <h2>{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
-        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setImageFile(null); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
+        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setVariants([{color:'',imageUrl:'',file:null,preview:''}]); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
       </div>
       <div className="account-card" style={{padding: '3rem'}}>
         <form onSubmit={handleAddProduct} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
@@ -1038,9 +1089,40 @@ function StoreClient() {
             <label style={{marginBottom: 0, fontSize: '1rem', color: 'var(--text-primary)'}}>Available for Purchase</label>
           </div>
           <div className="auth-form-group">
-            <label>Product Image {editingProduct && <span style={{color: 'var(--text-secondary)', fontWeight: 400}}>(leave empty to keep current)</span>}</label>
-            {editingProduct && <img src={editingProduct.image || editingProduct.imageUrl} alt="Current" style={{width: 80, height: 80, borderRadius: '8px', objectFit: 'cover', marginBottom: '0.5rem', background: 'rgba(255,255,255,0.05)'}} />}
-            <input type="file" accept="image/*" {...(!editingProduct ? {required: true} : {})} onChange={e => setImageFile(e.target.files ? e.target.files[0] : null)} style={{border: '1px solid var(--border-color)', padding: '0.5rem'}} />
+            <label>Product Images & Color Variants</label>
+            <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',marginTop:'0.5rem'}}>
+              {variants.map((v, idx) => (
+                <div key={idx} style={{display:'flex',gap:'1rem',alignItems:'flex-start',padding:'1rem',background:'rgba(0,0,0,0.2)',borderRadius:'10px',border:'1px solid var(--border-color)'}}>
+                  <div style={{width:72,height:72,borderRadius:8,overflow:'hidden',flexShrink:0,background:'rgba(255,255,255,0.05)',border:'1px dashed var(--border-color)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    {v.preview ? <img src={v.preview} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} /> : <span style={{color:'var(--text-secondary)',fontSize:'1.4rem'}}>+</span>}
+                  </div>
+                  <div style={{flex:1,display:'flex',flexDirection:'column',gap:'0.5rem'}}>
+                    <input
+                      type="text"
+                      placeholder="Color name (e.g. Black, White, Red)"
+                      value={v.color}
+                      onChange={e => setVariants(prev => prev.map((item,i) => i===idx ? {...item,color:e.target.value} : item))}
+                      style={{background:'rgba(0,0,0,0.3)',border:'1px solid var(--border-color)',color:'white',padding:'0.5rem 0.75rem',borderRadius:'6px',fontSize:'0.9rem',width:'100%'}}
+                    />
+                    <label style={{cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'6px',color:'var(--active-blue)',fontSize:'0.82rem',fontWeight:600}}>
+                      <input type="file" accept="image/*" style={{display:'none'}} onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) setVariants(prev => prev.map((item,i) => i===idx ? {...item,file,preview:URL.createObjectURL(file)} : item));
+                      }} />
+                      {v.preview ? '🔄 Replace Image' : '📷 Select Image'}
+                    </label>
+                  </div>
+                  {variants.length > 1 && (
+                    <button type="button" onClick={() => setVariants(prev => prev.filter((_,i) => i!==idx))} style={{background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'#ef4444',borderRadius:'6px',padding:'0.35rem 0.6rem',cursor:'pointer',flexShrink:0,fontSize:'0.85rem'}}>✕</button>
+                  )}
+                </div>
+              ))}
+              {variants.length < 6 && (
+                <button type="button" onClick={() => setVariants(prev => [...prev, {color:'',imageUrl:'',file:null,preview:''}])} style={{border:'2px dashed var(--border-color)',background:'transparent',color:'var(--text-secondary)',borderRadius:'10px',padding:'0.75rem',cursor:'pointer',fontSize:'0.9rem',width:'100%'}}>
+                  + Add Another Color / Image
+                </button>
+              )}
+            </div>
           </div>
           <button type="submit" className="btn-primary" disabled={uploading} style={{marginTop: '1rem', padding: '1rem', fontSize: '1.1rem'}}>
             {uploading ? 'Uploading & Saving...' : editingProduct ? 'Update Product' : 'Publish Product'}
@@ -1057,7 +1139,7 @@ function StoreClient() {
           <h2>Manage Inventory</h2>
           <span style={{color: 'var(--text-secondary)'}}>{products.length} products total</span>
         </div>
-        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setImageFile(null); setActiveView('add-product'); }} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '0.6rem 1.2rem', fontSize: '0.75rem'}}><PlusSquare size={22} /><span>Add New Product</span></button>
+        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setVariants([{color:'',imageUrl:'',file:null,preview:''}]); setActiveView('add-product'); }} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '0.6rem 1.2rem', fontSize: '0.75rem'}}><PlusSquare size={22} /><span>Add New Product</span></button>
       </div>
       <div className="account-card" style={{padding: '1.5rem', overflowX: 'auto'}}>
         <table style={{width: '100%', borderCollapse: 'collapse'}}>
@@ -1160,15 +1242,19 @@ function StoreClient() {
     return (
       <div className="account-container" style={{maxWidth: '1000px'}}>
         <div style={{display: 'flex', gap: '3rem', background: 'var(--bg-sidebar)', padding: '2.5rem', borderRadius: '16px', border: '1px solid var(--border-color)'}}>
-          {/* Product Image */}
-          <div style={{flex: '1', position: 'relative'}}>
-            {hasDiscount && (
-              <div className="discount-ribbon" style={{top: '16px', left: '0px', fontSize: '0.85rem', padding: '0.4rem 1rem 0.4rem 1.2rem'}}>{p.discountPercentage}% Off</div>
-            )}
-            <div style={{background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '320px'}}>
-              <img src={p.image} alt={p.name} style={{maxWidth: '100%', maxHeight: '300px', objectFit: 'contain', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))'}} />
+            {/* Image — swaps with selected variant */}
+            <div style={{flex: '1', position: 'relative'}}>
+              {hasDiscount && (
+                <div className="discount-ribbon" style={{top: '16px', left: '0px', fontSize: '0.85rem', padding: '0.4rem 1rem 0.4rem 1.2rem'}}>{p.discountPercentage}% Off</div>
+              )}
+              <div style={{background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '320px'}}>
+                <img
+                  src={parseVariants(p)[selectedVariantIdx]?.imageUrl || p.image}
+                  alt={p.name}
+                  style={{maxWidth: '100%', maxHeight: '300px', objectFit: 'contain', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.5))', transition: 'opacity 0.2s'}}
+                />
+              </div>
             </div>
-          </div>
 
           {/* Product Info */}
           <div style={{flex: '1', display: 'flex', flexDirection: 'column'}}>
@@ -1222,11 +1308,36 @@ function StoreClient() {
               </div>
             )}
 
+            {/* Color swatch picker */}
+            {(() => {
+              const pv = parseVariants(p);
+              const currentImg = pv[selectedVariantIdx]?.imageUrl || p.image;
+              return pv.length > 0 ? (
+                <div style={{marginBottom:'1.5rem'}}>
+                  <div style={{fontSize:'0.7rem',color:'var(--text-secondary)',textTransform:'uppercase',fontWeight:600,marginBottom:'0.6rem'}}>
+                    Color — <span style={{color:'var(--text-primary)',textTransform:'none'}}>{pv[selectedVariantIdx]?.color || 'Default'}</span>
+                  </div>
+                  <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
+                    {pv.map((v, i) => (
+                      <button key={i} title={v.color} onClick={() => setSelectedVariantIdx(i)} style={{width:30,height:30,borderRadius:'50%',background:colorToCss(v.color),border:selectedVariantIdx===i?'3px solid white':'2px solid rgba(255,255,255,0.2)',cursor:'pointer',boxShadow:selectedVariantIdx===i?'0 0 0 2px var(--active-blue)':'none',transition:'all 0.2s',flexShrink:0}} />
+                    ))}
+                  </div>
+                  {/* swap image based on selected variant */}
+                  {currentImg !== p.image && (
+                    <img src={currentImg} alt={p.name} style={{display:'none'}} />
+                  )}
+                </div>
+              ) : null;
+            })()}
+
             {/* Actions */}
             <div style={{marginTop: 'auto', display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
               {role !== 'admin' && (
                 <>
-                  <button className="btn-primary" onClick={() => addToCart(p)} style={{flex: 2, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.1rem', borderRadius: '10px', minWidth: '140px'}}>
+                  <button className="btn-primary" onClick={() => {
+                    const pv = parseVariants(p);
+                    addToCart({...p, image: pv[selectedVariantIdx]?.imageUrl || p.image, selectedColor: pv[selectedVariantIdx]?.color || ''});
+                  }} style={{flex: 2, padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.1rem', borderRadius: '10px', minWidth: '140px'}}>
                     <ShoppingCart size={20} /> Add to Cart
                   </button>
                   <button onClick={() => toggleWishlist(p)} style={{padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)', background: isInWishlist(p.id) ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.05)', color: isInWishlist(p.id) ? '#ef4444' : 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'all 0.2s'}}>

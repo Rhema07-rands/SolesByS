@@ -39,6 +39,7 @@ using (var scope = app.Services.CreateScope())
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Password longtext;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN Size longtext;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN IsAvailable tinyint(1) DEFAULT 1;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN Variants longtext DEFAULT '';"); } catch { }
         try { db.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS Carts (UserId INT PRIMARY KEY, CartData LONGTEXT, LastUpdated DATETIME(6));"); } catch { }
         Console.WriteLine("Database connected successfully.");
     }
@@ -86,7 +87,6 @@ app.MapPut("/api/products/{id}", async (int id, ProductEntity updatedProduct, Ap
     if (product is null) return Results.NotFound();
     
     product.Name = updatedProduct.Name;
-    product.Description = updatedProduct.Description;
     product.Price = updatedProduct.Price;
     product.Brand = updatedProduct.Brand;
     product.Size = updatedProduct.Size;
@@ -94,6 +94,7 @@ app.MapPut("/api/products/{id}", async (int id, ProductEntity updatedProduct, Ap
     product.IsSpecialOffer = updatedProduct.IsSpecialOffer;
     product.DiscountPercentage = updatedProduct.IsSpecialOffer ? updatedProduct.DiscountPercentage : 0;
     product.IsAvailable = updatedProduct.IsAvailable;
+    product.Variants = updatedProduct.Variants ?? product.Variants;
     
     await db.SaveChangesAsync();
     return Results.Ok(product);

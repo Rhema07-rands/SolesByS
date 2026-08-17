@@ -45,6 +45,7 @@ namespace SolesByS.Api
         public bool IsSpecialOffer { get; set; }
         public decimal Rating { get; set; } = 5.0m;
         public bool IsAvailable { get; set; } = true;
+        public string Variants { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
