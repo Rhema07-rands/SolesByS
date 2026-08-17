@@ -405,6 +405,27 @@ function StoreClient() {
         {products.filter(p => p.isSpecialOffer).length === 0 && <p style={{gridColumn: '1/-1', color: 'var(--text-secondary)'}}>No special offers right now.</p>}
       </div>
 
+      <div style={{display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '1rem', marginBottom: '1rem', scrollbarWidth: 'none'}}>
+        {['All', 'Sneakers', 'Shoes'].map(cat => (
+          <button 
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            style={{
+              padding: '0.5rem 1.25rem', 
+              borderRadius: '20px', 
+              border: selectedCategory === cat ? 'none' : '1px solid var(--border-color)',
+              background: selectedCategory === cat ? 'var(--active-blue)' : 'transparent',
+              color: selectedCategory === cat ? '#fff' : 'var(--text-primary)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.2s'
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       <div className="products-grid">
         {products.filter(p => !p.isSpecialOffer && (selectedCategory === 'All' || p.category === selectedCategory)).map((product, i) => (
           <div key={product.id || i} className="product-card" style={{position: 'relative'}}>
@@ -1101,9 +1122,6 @@ function StoreClient() {
               <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} style={{width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-app)', border: '1px solid var(--border-color)', color: 'var(--text-primary)'}}>
                 <option value="Sneakers">Sneakers</option>
                 <option value="Shoes">Shoes</option>
-                <option value="Boots">Boots</option>
-                <option value="Sandals">Sandals</option>
-                <option value="Accessories">Accessories</option>
               </select>
             </div>
           </div>
