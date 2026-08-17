@@ -22,6 +22,11 @@ body {
   font-family: 'Inter', -apple-system, sans-serif;
 }
 
+html {
+  background-color: var(--bg-app);
+  color-scheme: dark;
+}
+
 .layout {
   display: flex;
   min-height: 100vh;
