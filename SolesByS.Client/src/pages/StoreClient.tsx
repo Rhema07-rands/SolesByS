@@ -435,6 +435,11 @@ function StoreClient() {
       </div>
 
       <div className="products-grid">
+        {products.filter(p => !p.isSpecialOffer && (selectedCategory === 'All' || p.category === selectedCategory)).length === 0 && (
+          <div style={{gridColumn: '1/-1', color: 'var(--text-secondary)', textAlign: 'center', padding: '3rem 1rem', background: 'rgba(0,0,0,0.1)', borderRadius: '12px', border: '1px dashed var(--border-color)'}}>
+            <p style={{fontSize: '1.1rem'}}>No shoes yet</p>
+          </div>
+        )}
         {products.filter(p => !p.isSpecialOffer && (selectedCategory === 'All' || p.category === selectedCategory)).map((product, i) => (
           <div key={product.id || i} className="product-card" style={{position: 'relative'}}>
             {role !== 'admin' && (
