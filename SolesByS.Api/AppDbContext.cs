@@ -46,6 +46,7 @@ namespace SolesByS.Api
         public decimal Rating { get; set; } = 5.0m;
         public bool IsAvailable { get; set; } = true;
         public string Variants { get; set; } = string.Empty;
+        public string Category { get; set; } = "Sneakers";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

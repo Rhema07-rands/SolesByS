@@ -128,6 +128,7 @@ function StoreClient() {
   const [dbUsers, setDbUsers] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [currentUser, setCurrentUser] = useState(getStoredUser);
   const navigate = useNavigate();
 
@@ -404,13 +405,9 @@ function StoreClient() {
         {products.filter(p => p.isSpecialOffer).length === 0 && <p style={{gridColumn: '1/-1', color: 'var(--text-secondary)'}}>No special offers right now.</p>}
       </div>
 
-      <div className="section-header" style={{marginBottom: '2rem'}}>
-        <h2>All Shoes</h2>
-        <span style={{color: 'var(--text-secondary)'}}>{products.filter(p => !p.isSpecialOffer).length} items available</span>
-      </div>
       <div className="products-grid">
-        {products.filter(p => !p.isSpecialOffer).map((product, i) => (
-          <div key={`prod-${i}`} className="product-card" style={{position: 'relative'}}>
+        {products.filter(p => !p.isSpecialOffer && (selectedCategory === 'All' || p.category === selectedCategory)).map((product, i) => (
+          <div key={product.id || i} className="product-card" style={{position: 'relative'}}>
             {role !== 'admin' && (
               <button onClick={() => toggleWishlist(product)} style={{position: 'absolute', top: '8px', right: '8px', zIndex: 2, background: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s'}}>
                 <Heart size={16} color={isInWishlist(product.id) ? '#ef4444' : 'white'} fill={isInWishlist(product.id) ? '#ef4444' : 'none'} />
@@ -979,7 +976,7 @@ function StoreClient() {
     );
   };
 
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true, category: 'Sneakers' });
   const [uploading, setUploading] = useState(false);
   const [variants, setVariants] = useState<VariantItem[]>([{color:'',imageUrl:'',file:null,preview:''}]);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -991,6 +988,7 @@ function StoreClient() {
       price: String(product.price || ''),
       brand: product.brand || '',
       size: product.size || '',
+      category: product.category || 'Sneakers',
       isSpecialOffer: product.isSpecialOffer || false,
       discountPercentage: String(product.discountPercentage || ''),
       isAvailable: product.isAvailable !== false
@@ -1035,6 +1033,7 @@ function StoreClient() {
         price: parseFloat(newProduct.price),
         brand: newProduct.brand,
         size: newProduct.size,
+        category: newProduct.category,
         imageUrl: primaryImageUrl,
         variants: JSON.stringify(uploadedVariants),
         isSpecialOffer: newProduct.isSpecialOffer,
@@ -1059,7 +1058,7 @@ function StoreClient() {
         alert('Product added successfully!');
       }
 
-      setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true});
+      setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true,category:'Sneakers'});
       setVariants([{color:'',imageUrl:'',file:null,preview:''}]);
       setEditingProduct(null);
       setActiveView('manage-products');
@@ -1075,7 +1074,7 @@ function StoreClient() {
     <div className="account-container" style={{maxWidth: '800px'}}>
       <div className="section-header" style={{marginBottom: '2rem'}}>
         <h2>{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
-        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setVariants([{color:'',imageUrl:'',file:null,preview:''}]); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
+        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true,category:'Sneakers'}); setVariants([{color:'',imageUrl:'',file:null,preview:''}]); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
       </div>
       <div className="account-card" style={{padding: '3rem'}}>
         <form onSubmit={handleAddProduct} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
@@ -1096,6 +1095,16 @@ function StoreClient() {
             <div className="auth-form-group">
               <label>Shoe Size</label>
               <input type="text" required placeholder="e.g. UK 9, EU 43, US 10" value={newProduct.size} onChange={e => setNewProduct({...newProduct, size: e.target.value})} style={{border: '1px solid var(--border-color)'}} />
+            </div>
+            <div className="form-group" style={{gridColumn: '1/-1'}}>
+              <label>Category</label>
+              <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} style={{width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-app)', border: '1px solid var(--border-color)', color: 'var(--text-primary)'}}>
+                <option value="Sneakers">Sneakers</option>
+                <option value="Shoes">Shoes</option>
+                <option value="Boots">Boots</option>
+                <option value="Sandals">Sandals</option>
+                <option value="Accessories">Accessories</option>
+              </select>
             </div>
           </div>
           <div className="auth-form-group" style={{flexDirection: 'row', alignItems: 'center', gap: '1rem'}}>
@@ -1163,7 +1172,7 @@ function StoreClient() {
           <h2>Manage Inventory</h2>
           <span style={{color: 'var(--text-secondary)'}}>{products.length} products total</span>
         </div>
-        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setVariants([{color:'',imageUrl:'',file:null,preview:''}]); setActiveView('add-product'); }} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '0.6rem 1.2rem', fontSize: '0.75rem'}}><PlusSquare size={22} /><span>Add New Product</span></button>
+        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true,category:'Sneakers'}); setVariants([{color:'',imageUrl:'',file:null,preview:''}]); setActiveView('add-product'); }} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '0.6rem 1.2rem', fontSize: '0.75rem'}}><PlusSquare size={22} /><span>Add New Product</span></button>
       </div>
       <div className="account-card" style={{padding: '1.5rem', overflowX: 'auto'}}>
         <table style={{width: '100%', borderCollapse: 'collapse'}}>

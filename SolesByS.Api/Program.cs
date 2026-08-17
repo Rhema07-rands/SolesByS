@@ -42,6 +42,8 @@ using (var scope = app.Services.CreateScope())
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN IsAvailable tinyint(1) DEFAULT 1;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN Variants longtext;"); } catch { }
         try { db.Database.ExecuteSqlRaw("UPDATE Products SET Variants = '' WHERE Variants IS NULL;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN Category longtext;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("UPDATE Products SET Category = 'Sneakers' WHERE Category IS NULL;"); } catch { }
         try { db.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS Carts (UserId INT PRIMARY KEY, CartData LONGTEXT, LastUpdated DATETIME(6));"); } catch { }
         Console.WriteLine("Database connected successfully.");
     }
@@ -97,6 +99,7 @@ app.MapPut("/api/products/{id}", async (int id, ProductEntity updatedProduct, Ap
     product.DiscountPercentage = updatedProduct.IsSpecialOffer ? updatedProduct.DiscountPercentage : 0;
     product.IsAvailable = updatedProduct.IsAvailable;
     product.Variants = updatedProduct.Variants ?? product.Variants;
+    product.Category = updatedProduct.Category ?? product.Category;
     
     await db.SaveChangesAsync();
     return Results.Ok(product);
