@@ -124,6 +124,7 @@ function StoreClient() {
   const [role] = useState(localStorage.getItem('role') || 'user');
   const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState(false);
   const [dbUsers, setDbUsers] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
@@ -184,18 +185,31 @@ function StoreClient() {
 
   useEffect(() => { setSelectedVariantIdx(0); }, [selectedProduct]);
 
-  useEffect(() => {
+  const fetchProducts = () => {
     setProductsLoading(true);
+    setProductsError(false);
     fetch('https://solesbys.onrender.com/api/products')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
       .then(data => {
-        if(data && data.length > 0) {
+        if(data && Array.isArray(data)) {
           const mapped = data.map((d: any) => ({...d, image: d.imageUrl, rating: d.rating || 5}));
           setProducts(mapped);
+        } else {
+          setProducts([]);
         }
       })
-      .catch(console.error)
+      .catch(err => {
+        console.error(err);
+        setProductsError(true);
+      })
       .finally(() => setProductsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchProducts();
 
     if (role === 'admin') {
       fetch('https://solesbys.onrender.com/api/users')
@@ -244,9 +258,14 @@ function StoreClient() {
       </div>
 
       {productsLoading ? (
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem',gap:'1rem'}}>
-          <div style={{width:40,height:40,border:'3px solid rgba(255,255,255,0.1)',borderTop:'3px solid var(--active-blue)',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />
-          <span style={{color:'var(--text-secondary)'}}>Loading products...</span>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem',gap:'1rem',textAlign:'center'}}>
+          <div className="login-spinner" style={{width:40,height:40,borderWidth:3}} />
+          <span style={{color:'var(--text-secondary)'}}>Loading products...<br/><span style={{fontSize:'0.8rem'}}>(This may take up to 50s if the server is waking up)</span></span>
+        </div>
+      ) : productsError ? (
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem',gap:'1rem',textAlign:'center'}}>
+          <span style={{color:'var(--text-secondary)'}}>Failed to load products. The server might still be waking up.</span>
+          <button onClick={fetchProducts} className="btn-primary" style={{padding: '0.5rem 1.5rem', borderRadius: '8px'}}>Try Again</button>
         </div>
       ) : (<>
 
@@ -347,9 +366,14 @@ function StoreClient() {
       </div>
 
       {productsLoading ? (
-        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem',gap:'1rem'}}>
-          <div style={{width:40,height:40,border:'3px solid rgba(255,255,255,0.1)',borderTop:'3px solid var(--active-blue)',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />
-          <span style={{color:'var(--text-secondary)'}}>Loading products...</span>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem',gap:'1rem',textAlign:'center'}}>
+          <div className="login-spinner" style={{width:40,height:40,borderWidth:3}} />
+          <span style={{color:'var(--text-secondary)'}}>Loading products...<br/><span style={{fontSize:'0.8rem'}}>(This may take up to 50s if the server is waking up)</span></span>
+        </div>
+      ) : productsError ? (
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'4rem',gap:'1rem',textAlign:'center'}}>
+          <span style={{color:'var(--text-secondary)'}}>Failed to load products. The server might still be waking up.</span>
+          <button onClick={fetchProducts} className="btn-primary" style={{padding: '0.5rem 1.5rem', borderRadius: '8px'}}>Try Again</button>
         </div>
       ) : (<>
 
