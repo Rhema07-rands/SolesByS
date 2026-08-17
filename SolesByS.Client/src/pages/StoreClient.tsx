@@ -1157,20 +1157,25 @@ function StoreClient() {
             <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',marginTop:'0.5rem'}}>
               {variants.map((v, idx) => (
                 <div key={idx} style={{display:'flex',gap:'1rem',alignItems:'flex-start',padding:'1rem',background:'rgba(0,0,0,0.2)',borderRadius:'10px',border:'1px solid var(--border-color)'}}>
-                  <label style={{width:72,height:72,borderRadius:8,overflow:'hidden',flexShrink:0,background:'rgba(255,255,255,0.05)',border:'1px dashed var(--border-color)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}} title={v.preview ? 'Replace Image' : 'Select Image'}>
-                    <input type="file" accept="image/*" style={{display:'none'}} onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (file) setVariants(prev => prev.map((item,i) => i===idx ? {...item,file,preview:URL.createObjectURL(file)} : item));
-                    }} />
-                    {v.preview ? (
-                      <>
-                        <img src={v.preview} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
-                        <div className="img-hover-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity 0.2s'}} onMouseEnter={e => (e.currentTarget.style.opacity='1')} onMouseLeave={e => (e.currentTarget.style.opacity='0')}>
-                          <Edit2 size={16} color="white"/>
-                        </div>
-                      </>
-                    ) : <span style={{color:'var(--text-secondary)',fontSize:'1.4rem'}}>+</span>}
-                  </label>
+                  <div style={{position: 'relative'}}>
+                    <label style={{width:72,height:72,borderRadius:8,overflow:'hidden',flexShrink:0,background:'rgba(255,255,255,0.05)',border:'1px dashed var(--border-color)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}} title={v.preview ? 'Replace Image' : 'Select Image'}>
+                      <input type="file" accept="image/*" style={{display:'none'}} onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) setVariants(prev => prev.map((item,i) => i===idx ? {...item,file,preview:URL.createObjectURL(file)} : item));
+                      }} />
+                      {v.preview ? (
+                        <>
+                          <img src={v.preview} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                          <div className="img-hover-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity 0.2s'}} onMouseEnter={e => (e.currentTarget.style.opacity='1')} onMouseLeave={e => (e.currentTarget.style.opacity='0')}>
+                            <Edit2 size={16} color="white"/>
+                          </div>
+                        </>
+                      ) : <span style={{color:'var(--text-secondary)',fontSize:'1.4rem'}}>+</span>}
+                    </label>
+                    {v.preview && (
+                      <button type="button" onClick={() => setVariants(prev => prev.map((item,i) => i===idx ? {...item,file:null,preview:'',imageUrl:''} : item))} style={{position:'absolute',top:-6,right:-6,background:'#ef4444',border:'none',color:'white',borderRadius:'50%',width:20,height:20,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:'10px',zIndex:2,boxShadow:'0 2px 4px rgba(0,0,0,0.3)'}} title="Remove Image">✕</button>
+                    )}
+                  </div>
                   <div style={{flex:1,display:'flex',flexDirection:'column',gap:'0.5rem'}}>
                     <input
                       type="text"
