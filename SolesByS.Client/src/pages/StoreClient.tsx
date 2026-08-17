@@ -1157,24 +1157,28 @@ function StoreClient() {
             <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',marginTop:'0.5rem'}}>
               {variants.map((v, idx) => (
                 <div key={idx} style={{display:'flex',gap:'1rem',alignItems:'flex-start',padding:'1rem',background:'rgba(0,0,0,0.2)',borderRadius:'10px',border:'1px solid var(--border-color)'}}>
-                  <div style={{width:72,height:72,borderRadius:8,overflow:'hidden',flexShrink:0,background:'rgba(255,255,255,0.05)',border:'1px dashed var(--border-color)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    {v.preview ? <img src={v.preview} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} /> : <span style={{color:'var(--text-secondary)',fontSize:'1.4rem'}}>+</span>}
-                  </div>
+                  <label style={{width:72,height:72,borderRadius:8,overflow:'hidden',flexShrink:0,background:'rgba(255,255,255,0.05)',border:'1px dashed var(--border-color)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}} title={v.preview ? 'Replace Image' : 'Select Image'}>
+                    <input type="file" accept="image/*" style={{display:'none'}} onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) setVariants(prev => prev.map((item,i) => i===idx ? {...item,file,preview:URL.createObjectURL(file)} : item));
+                    }} />
+                    {v.preview ? (
+                      <>
+                        <img src={v.preview} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                        <div className="img-hover-overlay" style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',opacity:0,transition:'opacity 0.2s'}} onMouseEnter={e => (e.currentTarget.style.opacity='1')} onMouseLeave={e => (e.currentTarget.style.opacity='0')}>
+                          <Edit2 size={16} color="white"/>
+                        </div>
+                      </>
+                    ) : <span style={{color:'var(--text-secondary)',fontSize:'1.4rem'}}>+</span>}
+                  </label>
                   <div style={{flex:1,display:'flex',flexDirection:'column',gap:'0.5rem'}}>
                     <input
                       type="text"
                       placeholder="Color name (e.g. Black, White, Red)"
                       value={v.color}
                       onChange={e => setVariants(prev => prev.map((item,i) => i===idx ? {...item,color:e.target.value} : item))}
-                      style={{background:'rgba(0,0,0,0.3)',border:'1px solid var(--border-color)',color:'white',padding:'0.5rem 0.75rem',borderRadius:'6px',fontSize:'0.9rem',width:'100%'}}
+                      style={{background:'rgba(0,0,0,0.3)',border:'1px solid var(--border-color)',color:'white',padding:'0.5rem 0.75rem',borderRadius:'6px',fontSize:'0.9rem',width:'100%',height:'100%'}}
                     />
-                    <label style={{cursor:'pointer',display:'inline-flex',alignItems:'center',gap:'6px',color:'var(--active-blue)',fontSize:'0.82rem',fontWeight:600}}>
-                      <input type="file" accept="image/*" style={{display:'none'}} onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (file) setVariants(prev => prev.map((item,i) => i===idx ? {...item,file,preview:URL.createObjectURL(file)} : item));
-                      }} />
-                      {v.preview ? '🔄 Replace Image' : '📷 Select Image'}
-                    </label>
                   </div>
                   {variants.length > 1 && (
                     <button type="button" onClick={() => setVariants(prev => prev.filter((_,i) => i!==idx))} style={{background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'#ef4444',borderRadius:'6px',padding:'0.35rem 0.6rem',cursor:'pointer',flexShrink:0,fontSize:'0.85rem'}}>✕</button>
