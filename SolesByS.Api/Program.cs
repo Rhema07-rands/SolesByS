@@ -38,8 +38,10 @@ using (var scope = app.Services.CreateScope())
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Avatar longtext;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Password longtext;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN Size longtext;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("UPDATE Products SET Size = '' WHERE Size IS NULL;"); } catch { }
         try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN IsAvailable tinyint(1) DEFAULT 1;"); } catch { }
-        try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN Variants longtext DEFAULT '';"); } catch { }
+        try { db.Database.ExecuteSqlRaw("ALTER TABLE Products ADD COLUMN Variants longtext;"); } catch { }
+        try { db.Database.ExecuteSqlRaw("UPDATE Products SET Variants = '' WHERE Variants IS NULL;"); } catch { }
         try { db.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS Carts (UserId INT PRIMARY KEY, CartData LONGTEXT, LastUpdated DATETIME(6));"); } catch { }
         Console.WriteLine("Database connected successfully.");
     }
