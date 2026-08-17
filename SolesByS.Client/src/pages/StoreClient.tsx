@@ -10,7 +10,7 @@ const colorToCss = (name: string): string => {
     gray:'#6b7280',grey:'#6b7280',brown:'#78350f',navy:'#1e3a8a',beige:'#d4b896',
     cream:'#fef9ef',gold:'#fbbf24',silver:'#94a3b8',tan:'#c9a87c',
     maroon:'#7f1d1d',teal:'#0d9488',cyan:'#06b6d4',lime:'#84cc16',
-    rose:'#f43f5e',violet:'#8b5cf6',
+    rose:'#f43f5e',violet:'#8b5cf6',standard:'#94a3b8',
   };
   return m[name.toLowerCase().trim()] || '#6b7280';
 };
@@ -18,8 +18,16 @@ const colorToCss = (name: string): string => {
 type VariantItem = {color:string; imageUrl:string; file:File|null; preview:string};
 
 const parseVariants = (product: any): {color:string;imageUrl:string}[] => {
-  try { if (product.variants) return JSON.parse(product.variants); } catch {}
-  return [];
+  const fallback = [{color: 'Standard', imageUrl: product.imageUrl || product.image || ''}];
+  if (!product.variants) return fallback;
+  try {
+    const parsed = JSON.parse(product.variants);
+    const arr = Array.isArray(parsed) ? parsed : [];
+    if (arr.length === 0) return fallback;
+    return arr.map(v => ({...v, color: v.color || 'Standard'}));
+  } catch {
+    return fallback;
+  }
 };
 
 const getStoredUser = () => {
@@ -1351,13 +1359,7 @@ function StoreClient() {
               </div>
             </div>
 
-            {/* Description */}
-            {p.description && (
-              <div style={{marginBottom: '2rem'}}>
-                <div style={{fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '0.5rem'}}>Description</div>
-                <p style={{color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: '1.7'}}>{p.description}</p>
-              </div>
-            )}
+            {/* Description removed */}
 
             {/* Color swatch picker */}
             {(() => {
@@ -1366,7 +1368,7 @@ function StoreClient() {
               return pv.length > 0 ? (
                 <div style={{marginBottom:'1.5rem'}}>
                   <div style={{fontSize:'0.7rem',color:'var(--text-secondary)',textTransform:'uppercase',fontWeight:600,marginBottom:'0.6rem'}}>
-                    Color — <span style={{color:'var(--text-primary)',textTransform:'none'}}>{pv[selectedVariantIdx]?.color || 'Default'}</span>
+                    Color — <span style={{color:'var(--text-primary)',textTransform:'none'}}>{pv[selectedVariantIdx]?.color || 'Standard'}</span>
                   </div>
                   <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
                     {pv.map((v, i) => (
