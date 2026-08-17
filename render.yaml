@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: solesbys-store
+    runtime: static
+    buildCommand: cd SolesByS.Client && npm install && npm run build
+    staticPublishPath: SolesByS.Client/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
