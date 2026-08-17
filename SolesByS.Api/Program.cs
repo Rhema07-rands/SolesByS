@@ -170,7 +170,6 @@ app.MapGet("/api/cart/{userId}", async (int userId, AppDbContext db) =>
     return Results.Ok(cart);
 });
 
-public class CartRequest { public string CartData { get; set; } = string.Empty; }
 
 app.MapPost("/api/cart/{userId}", async (int userId, [FromBody] CartRequest req, AppDbContext db) =>
 {
@@ -246,6 +245,7 @@ app.MapPost("/api/checkout", async ([FromBody] CheckoutRequest request) =>
 
 app.Run();
 
+public class CartRequest { public string CartData { get; set; } = string.Empty; }
 public record CheckoutRequest(string CustomerName, string CustomerPhone, string ShippingAddress, List<CartItem> Items);
 public record CartItem(int Id, string Name, string Size, decimal Price, int Quantity);
 public record LoginRequest(string Email, string Password);
