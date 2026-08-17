@@ -913,7 +913,7 @@ function StoreClient() {
     );
   };
 
-  const [newProduct, setNewProduct] = useState({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true });
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -922,7 +922,6 @@ function StoreClient() {
     setEditingProduct(product);
     setNewProduct({
       name: product.name || '',
-      description: product.description || '',
       price: String(product.price || ''),
       brand: product.brand || '',
       size: product.size || '',
@@ -957,7 +956,6 @@ function StoreClient() {
       
       const productPayload = {
         name: newProduct.name,
-        description: newProduct.description,
         price: parseFloat(newProduct.price),
         brand: newProduct.brand,
         size: newProduct.size,
@@ -986,7 +984,7 @@ function StoreClient() {
         alert('Product added successfully!');
       }
 
-      setNewProduct({ name: '', description: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true });
+      setNewProduct({ name: '', price: '', brand: '', size: '', isSpecialOffer: false, discountPercentage: '', isAvailable: true });
       setImageFile(null);
       setEditingProduct(null);
       setActiveView('manage-products');
@@ -1002,7 +1000,7 @@ function StoreClient() {
     <div className="account-container" style={{maxWidth: '800px'}}>
       <div className="section-header" style={{marginBottom: '2rem'}}>
         <h2>{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
-        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setImageFile(null); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
+        {editingProduct && <button onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setImageFile(null); }} style={{background:'none',border:'none',color:'var(--active-blue)',cursor:'pointer',fontWeight:600}}>+ Add New Instead</button>}
       </div>
       <div className="account-card" style={{padding: '3rem'}}>
         <form onSubmit={handleAddProduct} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
@@ -1014,10 +1012,7 @@ function StoreClient() {
             <label>Brand</label>
             <input type="text" required value={newProduct.brand} onChange={e => setNewProduct({...newProduct, brand: e.target.value})} style={{border: '1px solid var(--border-color)'}} />
           </div>
-          <div className="auth-form-group">
-            <label>Description</label>
-            <textarea required value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} style={{border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.3)', color: 'white', padding: '1rem', borderRadius: '8px', minHeight: '100px'}} />
-          </div>
+
           <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem'}}>
             <div className="auth-form-group">
               <label>Price (₦)</label>
@@ -1062,7 +1057,7 @@ function StoreClient() {
           <h2>Manage Inventory</h2>
           <span style={{color: 'var(--text-secondary)'}}>{products.length} products total</span>
         </div>
-        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',description:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setImageFile(null); setActiveView('add-product'); }} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '0.6rem 1.2rem', fontSize: '0.75rem'}}><PlusSquare size={22} /><span>Add New Product</span></button>
+        <button className="btn-primary" onClick={() => { setEditingProduct(null); setNewProduct({name:'',price:'',brand:'',size:'',isSpecialOffer:false,discountPercentage:'',isAvailable:true}); setImageFile(null); setActiveView('add-product'); }} style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '0.6rem 1.2rem', fontSize: '0.75rem'}}><PlusSquare size={22} /><span>Add New Product</span></button>
       </div>
       <div className="account-card" style={{padding: '1.5rem', overflowX: 'auto'}}>
         <table style={{width: '100%', borderCollapse: 'collapse'}}>
