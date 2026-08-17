@@ -6,9 +6,11 @@ function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const res = await fetch('https://solesbys.onrender.com/api/login', {
         method: 'POST',
@@ -23,6 +25,8 @@ function Login() {
     } catch (err) {
       console.error(err);
       alert('Login failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -40,7 +44,13 @@ function Login() {
                     <label htmlFor="password">Password</label>
                     <input type="password" id="password" name="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
                 </div>
-                <button type="submit" className="btn btn-primary auth-btn">Login</button>
+                <button type="submit" className="btn btn-primary auth-btn" disabled={isLoading}>
+                  {isLoading ? (
+                    <span className="login-spinner" />
+                  ) : (
+                    'Login'
+                  )}
+                </button>
             </form>
             <div className="auth-footer">
                 Don't have an account? <Link to="/register">Sign Up</Link>

@@ -710,6 +710,12 @@ function StoreClient() {
     <div className="checkout-layout">
       <div className="checkout-form-section">
         <h2>Checkout Details</h2>
+        {!currentUser.id && (
+          <div style={{ marginBottom: '1.5rem', padding: '1rem 1.25rem', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Have an account? Login for faster checkout.</span>
+            <button onClick={() => navigate('/login')} style={{ background: 'var(--active-blue)', color: 'white', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Login</button>
+          </div>
+        )}
         <div className="checkout-panel">
           <h3 className="panel-title">Shipping & Contact Info</h3>
           <div className="billing-grid">
@@ -1305,13 +1311,25 @@ function StoreClient() {
 
           <div className="nav-section-title">USER</div>
           <div className="nav-group">
-            <div className={`nav-item ${activeView === 'account' ? 'active-parent' : ''}`} onClick={() => { setActiveView('account'); setSidebarOpen(false); }}>
-              <span className="nav-icon"><Settings size={18} /></span> My Account
-            </div>
-
-            <div className="nav-item" onClick={() => { setSidebarOpen(false); localStorage.removeItem('role'); localStorage.removeItem('user'); navigate('/login'); }}>
-              <span className="nav-icon"><LogOut size={18} /></span> Sign Out
-            </div>
+            {currentUser.id ? (
+              <>
+                <div className={`nav-item ${activeView === 'account' ? 'active-parent' : ''}`} onClick={() => { setActiveView('account'); setSidebarOpen(false); }}>
+                  <span className="nav-icon"><Settings size={18} /></span> My Account
+                </div>
+                <div className="nav-item" onClick={() => { setSidebarOpen(false); localStorage.removeItem('role'); localStorage.removeItem('user'); navigate('/login'); }}>
+                  <span className="nav-icon"><LogOut size={18} /></span> Sign Out
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="nav-item" onClick={() => { setSidebarOpen(false); navigate('/login'); }}>
+                  <span className="nav-icon"><LogOut size={18} /></span> Login
+                </div>
+                <div className="nav-item" onClick={() => { setSidebarOpen(false); navigate('/register'); }}>
+                  <span className="nav-icon"><Settings size={18} /></span> Create Account
+                </div>
+              </>
+            )}
           </div>
         </nav>
       </aside>
