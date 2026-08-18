@@ -58,6 +58,8 @@ function Register() {
       if (!res.ok) throw new Error('Registration failed');
       const userData = await res.json();
 
+      const expiryTime = new Date().getTime() + 1000 * 60 * 60; // 1 hour expiry
+      localStorage.setItem('loginExpiry', expiryTime.toString());
       localStorage.setItem('role', 'user');
       localStorage.setItem('user', JSON.stringify({
         role: 'user',

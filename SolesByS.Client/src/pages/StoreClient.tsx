@@ -33,7 +33,17 @@ const parseVariants = (product: any): {color:string;imageUrl:string}[] => {
 const getStoredUser = () => {
   try {
     const raw = localStorage.getItem('user');
-    if (raw) return JSON.parse(raw);
+    const expiry = localStorage.getItem('loginExpiry');
+    
+    if (raw) {
+      if (!expiry || new Date().getTime() > parseInt(expiry)) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('role');
+        localStorage.removeItem('loginExpiry');
+        return { name: 'Guest', email: '', phone: '', avatar: '', address: '', id: 0 };
+      }
+      return JSON.parse(raw);
+    }
   } catch {}
   return { name: 'Guest', email: '', phone: '', avatar: '', address: '', id: 0 };
 };

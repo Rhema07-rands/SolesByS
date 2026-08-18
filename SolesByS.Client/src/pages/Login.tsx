@@ -19,6 +19,8 @@ function Login() {
       });
       if (!res.ok) throw new Error('Login failed');
       const data = await res.json();
+      const expiryTime = new Date().getTime() + 1000 * 60 * 60; // 1 hour expiry
+      localStorage.setItem('loginExpiry', expiryTime.toString());
       localStorage.setItem('role', data.role);
       localStorage.setItem('user', JSON.stringify(data));
       navigate('/store');
