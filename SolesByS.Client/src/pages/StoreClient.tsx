@@ -139,7 +139,8 @@ function StoreClient() {
   };
 
   const isInWishlist = (id: number) => wishlist.some(item => item.id === id);
-  const [role] = useState(localStorage.getItem('role') || 'user');
+  const [currentUser, setCurrentUser] = useState(getStoredUser);
+  const [role] = useState(localStorage.getItem('role') || 'guest');
   const [products, setProducts] = useState<any[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState(false);
@@ -147,7 +148,6 @@ function StoreClient() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [currentUser, setCurrentUser] = useState(getStoredUser);
   const navigate = useNavigate();
 
   useEffect(() => {
